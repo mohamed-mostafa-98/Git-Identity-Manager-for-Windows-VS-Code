@@ -1,0 +1,152 @@
+{
+  "name": "github-account-manager",
+  "displayName": "GitHub Account & Git Identity Manager",
+  "description": "Production-grade Windows & VS Code tool for seamlessly switching and managing multiple GitHub accounts and Git identities.",
+  "version": "1.0.0",
+  "publisher": "mohammed-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mohammed-dev/githupe_acount_swicher.git"
+  },
+  "homepage": "https://github.com/mohammed-dev/githupe_acount_swicher",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Other"
+  ],
+  "keywords": [
+    "github",
+    "git",
+    "account switcher",
+    "identity",
+    "gcm",
+    "ssh",
+    "credentials"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:git-commit",
+    "onCommand:githubAccountManager.switchAccount",
+    "onCommand:githubAccountManager.addAccount",
+    "onCommand:githubAccountManager.mapProject",
+    "onCommand:githubAccountManager.diagnostics",
+    "workspaceContains:.git"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "githubAccountManager.switchAccount",
+        "title": "GitHub: Switch Account Profile",
+        "category": "GitHub Manager"
+      },
+      {
+        "command": "githubAccountManager.addAccount",
+        "title": "GitHub: Add Account Profile",
+        "category": "GitHub Manager"
+      },
+      {
+        "command": "githubAccountManager.removeAccount",
+        "title": "GitHub: Remove Account Profile",
+        "category": "GitHub Manager"
+      },
+      {
+        "command": "githubAccountManager.currentAccount",
+        "title": "GitHub: Current Active Account",
+        "category": "GitHub Manager"
+      },
+      {
+        "command": "githubAccountManager.mapProject",
+        "title": "GitHub: Map Project to Account",
+        "category": "GitHub Manager"
+      },
+      {
+        "command": "githubAccountManager.repositoryStatus",
+        "title": "GitHub: Repository Account Status",
+        "category": "GitHub Manager"
+      },
+      {
+        "command": "githubAccountManager.diagnostics",
+        "title": "GitHub: Run Diagnostics",
+        "category": "GitHub Manager"
+      },
+      {
+        "command": "githubAccountManager.validateAuthentication",
+        "title": "GitHub: Validate Authentication Health",
+        "category": "GitHub Manager"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "github-account-manager-view",
+          "title": "GitHub Manager",
+          "icon": "$(account)"
+        }
+      ]
+    },
+    "views": {
+      "github-account-manager-view": [
+        {
+          "id": "githubAccountProfilesTree",
+          "name": "Account Profiles"
+        },
+        {
+          "id": "githubRepoMappingsTree",
+          "name": "Repository Mappings"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "GitHub Account & Git Identity Manager",
+      "properties": {
+        "githubAccountManager.pushGuardMode": {
+          "type": "string",
+          "enum": [
+            "Warn",
+            "Strict",
+            "Disabled"
+          ],
+          "default": "Warn",
+          "description": "Protection behavior when pushing with an account that does not match the configured repository mapping."
+        },
+        "githubAccountManager.autoSwitchOnWorkspaceOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically activate the mapped account profile when opening a Git workspace."
+        },
+        "githubAccountManager.gitConfigScope": {
+          "type": "string",
+          "enum": [
+            "LocalRepo",
+            "IncludeIf"
+          ],
+          "default": "LocalRepo",
+          "description": "Method for managing repository git user.name and user.email identities."
+        },
+        "githubAccountManager.enableGcmHttpPath": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically set credential.useHttpPath=true for HTTPS repositories to isolate GCM account tokens."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.11.18",
+    "@types/vscode": "^1.75.0",
+    "@vscode/test-electron": "^2.2.3",
+    "mocha": "^10.2.0",
+    "typescript": "^4.9.4"
+  }
+}

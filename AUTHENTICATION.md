@@ -1,0 +1,70 @@
+# Authentication Specification
+
+## Overview
+
+The tool supports three distinct authentication strategies for GitHub account profiles:
+
+1. **HTTPS (Git Credential Manager - GCM)**
+2. **SSH (OpenSSH Host Aliasing)**
+3. **GitHub CLI (`gh`)**
+
+---
+
+## Strategy 1: HTTPS via Git Credential Manager (GCM)
+
+GCM is Microsoft's official cross-platform Git credential helper on Windows.
+
+### Configuration Rules
+When an account profile using HTTPS is activated for a repository, the tool executes:
+```cmd
+git config --local credential.useHttpPath true
+git config --local credential.username <github-username>
+```
+
+### How Windows Vault Target Keys Change
+- **Standard Git Default**:
+  `git:https://github.com` (Shared single entry across all accounts)
+- **With `useHttpPath` & `credential.username`**:
+  `git:https://github.com/company/backend` (Stored separately for Work)
+  `git:https://github.com/personal-user/app` (Stored separately for Personal)
+
+Result: Both Personal and Work HTTPS credentials co-exist in Windows Credential Vault simultaneously.
+
+---
+
+## Strategy 2: SSH via OpenSSH Host Aliasing
+
+For developers who authenticate using SSH key pairs (`git@github.com:...`).
+
+### OpenSSH Host Aliasing (`~/.ssh/config`)
+The extension manages Host blocks in `~/.ssh/config`:
+```sshconfig
+Host github.com-personal
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_personal
+    IdentitiesOnly yes
+
+Host github.com-work
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_work
+    IdentitiesOnly yes
+```
+
+### Remote URL Mapping
+When switching to the `Work` profile, the repository's origin URL is automatically updated:
+`git@github.com:company/backend.git` → `git@github.com-work:company/backend.git`
+
+OpenSSH routes traffic to `github.com` using the `id_ed25519_work` key automatically.
+
+---
+
+## Strategy 3: GitHub CLI (`gh`)
+
+If installed, the extension integrates with `gh auth status` and `gh auth switch`.
+When switching profiles, it runs:
+```cmd
+gh auth switch --user mohammed-work
+```
+This ensures GitHub CLI commands (`gh pr create`, `gh issue list`, `gh repo view`) operate under the correct account context.
