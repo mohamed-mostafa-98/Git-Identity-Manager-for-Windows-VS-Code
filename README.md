@@ -8,6 +8,8 @@ A production-grade developer tool for **Windows** and **VS Code** that solves th
 
 > 🚫 **Say Goodbye to Manual Credential Wiping (`cmdkey /delete:LegacyGeneric:target=git:https://github.com`) and Repeated Logins!**
 
+
+
 ---
 
 ## 📌 Problem Solved
