@@ -8,7 +8,17 @@ A production-grade developer tool for **Windows** and **VS Code** that solves th
 
 > 🚫 **Say Goodbye to Manual Credential Wiping (`cmdkey /delete:LegacyGeneric:target=git:https://github.com`) and Repeated Logins!**
 
+---
 
+## ✨ Features & Highlights
+
+- 🎛️ **Interactive Control Panel Dashboard**: Complete visual UI dashboard for managing accounts, repository mappings, local git identities, and system health checks.
+- ⚡ **1-Click Profile Switching**: Switch active GitHub profile and commit identity instantly with one click from the Status Bar, Activity Bar, or Dashboard.
+- 🔒 **Isolated HTTPS Vault Entries**: Automatically sets `credential.useHttpPath = true` so credentials for `Personal` and `Work` accounts co-exist side-by-side in Windows Credential Vault.
+- 🌐 **Native SSH Host Aliasing**: Generates OpenSSH `~/.ssh/config` host aliases (`github.com-work`, `github.com-personal`) to isolate multiple SSH key pairs effortlessly.
+- 📂 **Automatic Profile & Identity Mapping**: Auto-detects workspace repository or folder path and activates matching GitHub account profile and Git commit identity (`user.name` & `user.email`).
+- 🛡️ **Wrong Account Push Guard**: Intercepts `git push` operations and displays a protective warning if you are about to push with an account that doesn't match the repository mapping.
+- 📊 **Sidebar UI & Action Icons**: Activity Bar views with title bar navigation buttons (`+ Add`, `Switch`, `Dashboard`) and inline hover action icons (`Activate`, `Health`, `Delete`).
 
 ---
 
@@ -21,11 +31,22 @@ When working with multiple GitHub accounts on Windows:
 
 ### 💡 The Solution
 This tool acts as an **orchestration layer** between VS Code, Git, OpenSSH, and Windows Credential Manager:
-1. **Isolated HTTPS Vault Entries**: Automatically sets `credential.useHttpPath = true` and `credential.username` so credentials for `Personal` and `Work` accounts co-exist side-by-side in Windows Credential Vault.
-2. **Native SSH Host Aliasing**: Generates OpenSSH `~/.ssh/config` host aliases (`github.com-work`, `github.com-personal`) to isolate multiple SSH key pairs effortlessly.
-3. **Automatic Profile Activation**: Automatically detects your workspace repository or folder path and activates the matching GitHub account profile when you open VS Code.
-4. **Git Identity Sync**: Automatically keeps repository-local `user.name` and `user.email` synchronized with the active profile.
-5. **Wrong Account Push Guard**: Intercepts `git push` operations and displays a protective warning if you are about to push with an active account that doesn't match the repository mapping.
+1. **Isolated HTTPS Vault Entries**: Sets `credential.useHttpPath = true` and `credential.username` for clean HTTPS co-existence in Windows Credential Vault.
+2. **Native SSH Host Aliasing**: Generates OpenSSH `~/.ssh/config` host aliases to isolate multiple SSH key pairs.
+3. **Automatic Profile Activation**: Detects workspace repository or folder path and activates the matching GitHub account profile when opening VS Code.
+4. **Git Identity Sync**: Keeps repository-local `user.name` and `user.email` synchronized with the active profile.
+5. **Wrong Account Push Guard**: Displays protective warning before pushing with an mismatched active profile.
+
+---
+
+## 🖥️ Webview Control Panel Dashboard
+
+Launch the Control Panel by running `GitHub: Open Control Panel Dashboard` or clicking the `$(dashboard)` icon in the activity bar:
+
+- **👤 Account Profiles**: View profile cards with active badges, auth method, email, last used date, 1-click activation, health validation, and an inline profile creation form.
+- **🗺️ Repository Mappings**: Manage folder path and remote URL mapping rules with 1-click deletion and addition forms.
+- **📂 Workspace Identity**: Live workspace repository status, protocol breakdown, current local `user.name` and `user.email`, with a 1-click **Apply & Sync Identity** button.
+- **🩺 Diagnostics & Health**: Execute diagnostic audits and view system health reports directly in VS Code.
 
 ---
 
@@ -85,7 +106,7 @@ If you want to run or modify the source code locally:
 ### Step 1: Add Your Account Profiles
 
 1. Open the Command Palette (`Ctrl+Shift+P`).
-2. Type and select `GitHub: Add Account Profile`.
+2. Select `GitHub: Open Control Panel Dashboard` or `GitHub: Add Account Profile`.
 3. Choose your preferred setup option:
    - 🌐 **Login via Browser (OAuth)** *(Recommended)*: Opens GitHub in your web browser, authenticates your account, and automatically extracts your GitHub username and email!
    - ⚙️ **Manual Profile Setup**: Enter your username, email, and choose `HTTPS`, `SSH`, or `GitHub CLI` strategies manually.
@@ -99,7 +120,7 @@ If you want to run or modify the source code locally:
 Tell the extension which projects belong to which GitHub accounts:
 
 1. Open Command Palette (`Ctrl+Shift+P`).
-2. Run `GitHub: Map Project to Account`.
+2. Run `GitHub: Map Project to Account` or use the Dashboard.
 3. Select an account profile (e.g., `Work`).
 4. Choose a mapping rule:
    - **Current Workspace Folder**: Binds the active project folder (e.g., `C:\Projects\CompanySystem`) to `Work`.
@@ -123,11 +144,13 @@ Access these commands anytime from the Command Palette (`Ctrl+Shift+P`):
 
 | Command | Description |
 | :--- | :--- |
+| `GitHub: Open Control Panel Dashboard` | Launch interactive webview Control Panel Dashboard |
 | `GitHub: Switch Account Profile` | Manually switch active GitHub account profile |
 | `GitHub: Add Account Profile` | Launch wizard to add a new account profile |
 | `GitHub: Remove Account Profile` | Delete an existing account profile |
 | `GitHub: Current Active Account` | Display active account profile status |
 | `GitHub: Map Project to Account` | Map workspace folder or remote pattern to a profile |
+| `GitHub: Remove Repository Mapping` | Delete an existing repository mapping rule |
 | `GitHub: Repository Account Status` | View detailed account & identity status for active repo |
 | `GitHub: Run Diagnostics` | Open non-sensitive system health diagnostic report |
 | `GitHub: Validate Authentication Health` | Test authentication readiness for active profile |

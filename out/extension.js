@@ -39,6 +39,7 @@ const DiagnosticsService_1 = require("./services/DiagnosticsService");
 const StatusBarController_1 = require("./ui/StatusBarController");
 const AccountTreeDataProvider_1 = require("./ui/AccountTreeDataProvider");
 const QuickPickMenu_1 = require("./ui/QuickPickMenu");
+const DashboardWebview_1 = require("./ui/DashboardWebview");
 const logger_1 = require("./utils/logger");
 const AccountProfile_1 = require("./models/AccountProfile");
 let statusBarController;
@@ -69,6 +70,7 @@ async function activate(context) {
         statusBarController?.update();
         profilesTreeProvider.refresh();
         mappingsTreeProvider.refresh();
+        DashboardWebview_1.DashboardWebview.refresh();
     };
     /**
      * Automatic account profile application for open workspace repository.
@@ -113,7 +115,20 @@ async function activate(context) {
     // Listen to workspace folder changes
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => syncWorkspaceProfile()));
     // Register Commands
-    context.subscriptions.push(vscode.commands.registerCommand('githubAccountManager.switchAccount', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('githubAccountManager.openDashboard', () => {
+        DashboardWebview_1.DashboardWebview.createOrShow(context.extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncWorkspaceProfile);
+    }), vscode.commands.registerCommand('githubAccountManager.removeMapping', async (item) => {
+        const targetId = item?.mapping?.id;
+        if (!targetId)
+            return;
+        const confirm = await vscode.window.showWarningMessage(`Remove mapping rule '${item.mapping.pattern}'?`, { modal: true }, 'Remove');
+        if (confirm === 'Remove') {
+            await profileManager.removeMapping(targetId);
+            await syncWorkspaceProfile();
+            refreshUI();
+            vscode.window.showInformationMessage(`Removed repository mapping rule.`);
+        }
+    }), vscode.commands.registerCommand('githubAccountManager.switchAccount', async () => {
         const switched = await quickPickMenu.showAccountSwitcher();
         if (switched) {
             await syncWorkspaceProfile();

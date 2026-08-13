@@ -52,6 +52,11 @@ class QuickPickMenu {
             profileId: p.id
         }));
         items.push({
+            label: '$(dashboard) Open Control Panel Dashboard...',
+            description: 'Interactive UI for accounts, mappings, workspace identity & health',
+            openDashboard: true
+        });
+        items.push({
             label: '$(add) Add New Account Profile...',
             description: 'Configure a new Personal, Work, or Client profile'
         });
@@ -63,6 +68,10 @@ class QuickPickMenu {
             return undefined;
         if (selected.profileId) {
             return await this.profileManager.setActiveProfile(selected.profileId);
+        }
+        else if (selected.openDashboard) {
+            vscode.commands.executeCommand('githubAccountManager.openDashboard');
+            return undefined;
         }
         else {
             vscode.commands.executeCommand('githubAccountManager.addAccount');

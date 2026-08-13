@@ -55,7 +55,11 @@ class ProfileTreeItem extends vscode.TreeItem {
         this.description = `@${profile.githubUsername} (${profile.authenticationMethod})`;
         this.tooltip = `Email: ${profile.githubEmail}\nAuth: ${profile.authenticationMethod}\nCreated: ${new Date(profile.createdAt).toLocaleDateString()}`;
         this.iconPath = new vscode.ThemeIcon(isActive ? 'check' : 'account');
-        this.contextValue = 'profileItem';
+        this.contextValue = isActive ? 'profileItemActive' : 'profileItemInactive';
+        this.command = {
+            command: 'githubAccountManager.switchAccount',
+            title: 'Switch Profile'
+        };
     }
 }
 exports.ProfileTreeItem = ProfileTreeItem;
@@ -93,6 +97,10 @@ class MappingTreeItem extends vscode.TreeItem {
         this.tooltip = `Pattern: ${mapping.pattern}\nProfile: ${profileName}\nType: ${mapping.isPathPattern ? 'Path Pattern' : 'Remote URL Pattern'}`;
         this.iconPath = new vscode.ThemeIcon(mapping.isPathPattern ? 'folder' : 'repo');
         this.contextValue = 'mappingItem';
+        this.command = {
+            command: 'githubAccountManager.openDashboard',
+            title: 'Open Dashboard'
+        };
     }
 }
 exports.MappingTreeItem = MappingTreeItem;

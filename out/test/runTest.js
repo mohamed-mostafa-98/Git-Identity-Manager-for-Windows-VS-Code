@@ -31,7 +31,10 @@ async function main() {
         const extensionTestsPath = path.resolve(__dirname, './suite/index');
         await (0, test_electron_1.runTests)({
             extensionDevelopmentPath,
-            extensionTestsPath
+            extensionTestsPath,
+            launchArgs: [
+                `--user-data-dir=${path.resolve(__dirname, '../../.vscode-test/user-data')}`
+            ]
         });
     }
     catch (err) {

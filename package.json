@@ -29,6 +29,7 @@
   "main": "./out/extension.js",
   "activationEvents": [
     "onLanguage:git-commit",
+    "onCommand:githubAccountManager.openDashboard",
     "onCommand:githubAccountManager.switchAccount",
     "onCommand:githubAccountManager.addAccount",
     "onCommand:githubAccountManager.mapProject",
@@ -38,19 +39,28 @@
   "contributes": {
     "commands": [
       {
+        "command": "githubAccountManager.openDashboard",
+        "title": "GitHub: Open Control Panel Dashboard",
+        "category": "GitHub Manager",
+        "icon": "$(dashboard)"
+      },
+      {
         "command": "githubAccountManager.switchAccount",
         "title": "GitHub: Switch Account Profile",
-        "category": "GitHub Manager"
+        "category": "GitHub Manager",
+        "icon": "$(arrow-swap)"
       },
       {
         "command": "githubAccountManager.addAccount",
         "title": "GitHub: Add Account Profile",
-        "category": "GitHub Manager"
+        "category": "GitHub Manager",
+        "icon": "$(add)"
       },
       {
         "command": "githubAccountManager.removeAccount",
         "title": "GitHub: Remove Account Profile",
-        "category": "GitHub Manager"
+        "category": "GitHub Manager",
+        "icon": "$(trash)"
       },
       {
         "command": "githubAccountManager.currentAccount",
@@ -60,7 +70,14 @@
       {
         "command": "githubAccountManager.mapProject",
         "title": "GitHub: Map Project to Account",
-        "category": "GitHub Manager"
+        "category": "GitHub Manager",
+        "icon": "$(add)"
+      },
+      {
+        "command": "githubAccountManager.removeMapping",
+        "title": "GitHub: Remove Repository Mapping",
+        "category": "GitHub Manager",
+        "icon": "$(trash)"
       },
       {
         "command": "githubAccountManager.repositoryStatus",
@@ -75,9 +92,56 @@
       {
         "command": "githubAccountManager.validateAuthentication",
         "title": "GitHub: Validate Authentication Health",
-        "category": "GitHub Manager"
+        "category": "GitHub Manager",
+        "icon": "$(shield)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "githubAccountManager.openDashboard",
+          "when": "view == githubAccountProfilesTree || view == githubRepoMappingsTree",
+          "group": "navigation@1"
+        },
+        {
+          "command": "githubAccountManager.addAccount",
+          "when": "view == githubAccountProfilesTree",
+          "group": "navigation@2"
+        },
+        {
+          "command": "githubAccountManager.switchAccount",
+          "when": "view == githubAccountProfilesTree",
+          "group": "navigation@3"
+        },
+        {
+          "command": "githubAccountManager.mapProject",
+          "when": "view == githubRepoMappingsTree",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "githubAccountManager.switchAccount",
+          "when": "view == githubAccountProfilesTree && viewItem == profileItemInactive",
+          "group": "inline@1"
+        },
+        {
+          "command": "githubAccountManager.validateAuthentication",
+          "when": "view == githubAccountProfilesTree",
+          "group": "inline@2"
+        },
+        {
+          "command": "githubAccountManager.removeAccount",
+          "when": "view == githubAccountProfilesTree",
+          "group": "inline@3"
+        },
+        {
+          "command": "githubAccountManager.removeMapping",
+          "when": "view == githubRepoMappingsTree",
+          "group": "inline@1"
+        }
+      ]
+    },
     "viewsContainers": {
       "activitybar": [
         {
@@ -139,7 +203,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "test:unit": "mocha --ui tdd out/test/suite/repoDetector.test.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",

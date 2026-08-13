@@ -13,6 +13,7 @@ import { DiagnosticsService } from './services/DiagnosticsService';
 import { StatusBarController } from './ui/StatusBarController';
 import { AccountProfilesTreeProvider, RepoMappingsTreeProvider } from './ui/AccountTreeDataProvider';
 import { QuickPickMenu } from './ui/QuickPickMenu';
+import { DashboardWebview } from './ui/DashboardWebview';
 import { Logger } from './utils/logger';
 import { AuthenticationMethod } from './models/AccountProfile';
 
@@ -51,6 +52,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         statusBarController?.update();
         profilesTreeProvider.refresh();
         mappingsTreeProvider.refresh();
+        DashboardWebview.refresh();
     };
 
     /**
@@ -107,6 +109,36 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Register Commands
     context.subscriptions.push(
+        vscode.commands.registerCommand('githubAccountManager.openDashboard', () => {
+            DashboardWebview.createOrShow(
+                context.extensionUri,
+                profileManager,
+                repoDetector,
+                repoMapper,
+                gitIdentityManager,
+                diagnosticsService,
+                syncWorkspaceProfile
+            );
+        }),
+
+        vscode.commands.registerCommand('githubAccountManager.removeMapping', async (item?: any) => {
+            const targetId = item?.mapping?.id;
+            if (!targetId) return;
+
+            const confirm = await vscode.window.showWarningMessage(
+                `Remove mapping rule '${item.mapping.pattern}'?`,
+                { modal: true },
+                'Remove'
+            );
+
+            if (confirm === 'Remove') {
+                await profileManager.removeMapping(targetId);
+                await syncWorkspaceProfile();
+                refreshUI();
+                vscode.window.showInformationMessage(`Removed repository mapping rule.`);
+            }
+        }),
+
         vscode.commands.registerCommand('githubAccountManager.switchAccount', async () => {
             const switched = await quickPickMenu.showAccountSwitcher();
             if (switched) {

@@ -8,7 +8,10 @@ async function main() {
 
         await runTests({
             extensionDevelopmentPath,
-            extensionTestsPath
+            extensionTestsPath,
+            launchArgs: [
+                `--user-data-dir=${path.resolve(__dirname, '../../.vscode-test/user-data')}`
+            ]
         });
     } catch (err) {
         console.error('Failed to run tests', err);
