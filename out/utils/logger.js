@@ -32,7 +32,7 @@ class Logger {
             this.outputChannel.appendLine(formatted);
         }
         else {
-            console.log(formatted);
+            console.error(formatted);
         }
     }
     /**
@@ -44,6 +44,7 @@ class Logger {
         return text
             // GitHub OAuth/PAT tokens (ghp_, gho_, ghr_, ghu_, ghs_)
             .replace(/gh[pousr]_[A-Za-z0-9_]{36,255}/g, '[REDACTED_GITHUB_TOKEN]')
+            .replace(/github_pat_[A-Za-z0-9_]+/g, '[REDACTED_GITHUB_TOKEN]')
             // SSH Private Key blocks
             .replace(/-----BEGIN [A-Z]+ PRIVATE KEY-----[\s\S]*?-----END [A-Z]+ PRIVATE KEY-----/g, '[REDACTED_PRIVATE_KEY]')
             // Generic password/token URL credentials

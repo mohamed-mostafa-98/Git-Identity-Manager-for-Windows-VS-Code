@@ -2,14 +2,14 @@
   "name": "github-account-manager",
   "displayName": "GitHub Account & Git Identity Manager",
   "description": "Production-grade Windows & VS Code tool for seamlessly switching and managing multiple GitHub accounts and Git identities.",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "publisher": "mohammed-dev",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mohammed-dev/githupe_acount_swicher.git"
+    "url": "https://github.com/mohamed-mostafa-98/Git-Identity-Manager-for-Windows-VS-Code.git"
   },
-  "homepage": "https://github.com/mohammed-dev/githupe_acount_swicher",
+  "homepage": "https://github.com/mohamed-mostafa-98/Git-Identity-Manager-for-Windows-VS-Code",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -34,10 +34,17 @@
     "onCommand:githubAccountManager.addAccount",
     "onCommand:githubAccountManager.mapProject",
     "onCommand:githubAccountManager.diagnostics",
-    "workspaceContains:.git"
+    "workspaceContains:.git",
+    "onStartupFinished"
   ],
   "contributes": {
     "commands": [
+      {
+        "command": "githubAccountManager.saveToken",
+        "title": "GitHub: Save or Update Account Token",
+        "category": "GitHub Manager",
+        "icon": "$(key)"
+      },
       {
         "command": "githubAccountManager.openDashboard",
         "title": "GitHub: Open Control Panel Dashboard",
@@ -193,7 +200,7 @@
         "githubAccountManager.enableGcmHttpPath": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically set credential.useHttpPath=true for HTTPS repositories to isolate GCM account tokens."
+          "description": "Legacy setting: saved HTTPS authentication always enables GitHub credential path isolation."
         }
       }
     }
@@ -204,7 +211,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
     "test": "node ./out/test/runTest.js",
-    "test:unit": "mocha --ui tdd out/test/suite/repoDetector.test.js"
+    "test:unit": "npm run compile && mocha --ui tdd \"out/test/suite/*.test.js\""
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",

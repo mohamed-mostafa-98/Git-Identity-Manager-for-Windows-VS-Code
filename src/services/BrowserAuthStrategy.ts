@@ -1,8 +1,5 @@
-import * as vscode from 'vscode';
 import * as https from 'https';
-import { AccountProfile, AuthenticationMethod } from '../models/AccountProfile';
 import { Logger } from '../utils/logger';
-import { CommandExecutor } from '../utils/commandExecutor';
 
 export interface GitHubUserInfo {
     username: string;
@@ -17,13 +14,14 @@ export class BrowserAuthStrategy {
      * Uses VS Code's authentication provider to open the browser, authenticate user, and acquire OAuth token.
      */
     public async loginViaBrowser(): Promise<GitHubUserInfo | undefined> {
+        const vscode: typeof import('vscode') = require('vscode');
         try {
             Logger.info('Triggering GitHub Browser OAuth authentication session...');
 
             const session = await vscode.authentication.getSession(
                 'github',
                 ['repo', 'user:email', 'read:user', 'workflow'],
-                { createIfNone: true }
+                { forceNewSession: true }
             );
 
             if (!session) {
@@ -44,13 +42,7 @@ export class BrowserAuthStrategy {
                 };
             }
 
-            // Fallback to session account label if API call fails
-            return {
-                username: session.account.label,
-                email: `${session.account.label}@users.noreply.github.com`,
-                displayName: session.account.label,
-                accessToken: session.accessToken
-            };
+            throw new Error('Could not verify the GitHub account. Check your connection and try again.');
         } catch (error) {
             Logger.error('Browser authentication error', error);
             vscode.window.showErrorMessage(`Browser login failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -59,26 +51,10 @@ export class BrowserAuthStrategy {
     }
 
     /**
-     * Configures Git Credential Manager (GCM) for a browser-authenticated profile.
-     */
-    public async configureBrowserAuth(repoPath: string, profile: AccountProfile): Promise<boolean> {
-        try {
-            // Enable useHttpPath locally for this repo
-            await CommandExecutor.execute('git', ['config', '--local', 'credential.useHttpPath', 'true'], { cwd: repoPath });
-            await CommandExecutor.execute('git', ['config', '--local', 'credential.username', profile.githubUsername], { cwd: repoPath });
-
-            Logger.info(`Configured Browser Auth (GCM HttpPath) for ${profile.githubUsername} at ${repoPath}`);
-            return true;
-        } catch (error) {
-            Logger.error(`Error configuring Browser Auth for profile ${profile.githubUsername}`, error);
-            return false;
-        }
-    }
-
-    /**
      * Queries GitHub API (https://api.github.com/user) for authenticated user profile details.
      */
-    private async fetchGitHubUserProfile(token: string): Promise<{ username: string; email: string; displayName: string } | undefined> {
+    public async fetchGitHubUserProfile(token: string): Promise<{ username: string; email: string; displayName: string } | undefined> {
+        if (!/^[A-Za-z0-9_]+$/.test(token)) return undefined;
         return new Promise((resolve) => {
             const options: https.RequestOptions = {
                 hostname: 'api.github.com',
@@ -98,6 +74,10 @@ export class BrowserAuthStrategy {
                     if (res.statusCode === 200) {
                         try {
                             const json = JSON.parse(data);
+                            if (typeof json.login !== 'string' || !/^[A-Za-z0-9-]+$/.test(json.login)) {
+                                resolve(undefined);
+                                return;
+                            }
                             resolve({
                                 username: json.login,
                                 email: json.email || '',
@@ -113,6 +93,7 @@ export class BrowserAuthStrategy {
             });
 
             req.on('error', () => resolve(undefined));
+            req.setTimeout(15000, () => req.destroy(new Error('GitHub request timed out')));
             req.end();
         });
     }

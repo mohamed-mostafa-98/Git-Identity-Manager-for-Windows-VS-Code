@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Git Identity Manager</title>
+  <link rel="icon" href="icon.svg"><link rel="stylesheet" href="styles.css">
+  <script defer src="companion.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">↔</span><div>Git Identity<span>CONNECTED TO VS CODE</span></div></div>
+    <p class="nav-label">WORKSPACE</p>
+    <button class="nav-button active" data-view="accounts">Accounts</button>
+    <button class="nav-button" data-view="projects">Project mappings</button>
+    <button class="nav-button" data-view="tools">Workspace tools</button>
+    <div class="sidebar-bottom">One application, two views<div>Credentials stay in VS Code’s secure vault.</div></div>
+  </aside>
+  <main>
+    <header><strong>GitHub Account Manager</strong><button id="refresh" class="quiet">Refresh connection</button></header>
+    <label for="connection">VS Code window</label><select id="connection" aria-label="VS Code window"></select>
+    <p id="connection-status" class="small" role="status">Looking for VS Code…</p>
+    <div id="notice" role="status" hidden></div>
+    <section id="disconnected" class="view" hidden>
+      <h1>Connect your existing accounts</h1>
+      <div class="empty"><h2>Open the GitHub control panel in VS Code</h2>
+        <p>Install the updated extension, then run “GitHub: Open Control Panel Dashboard” in VS Code. Keep that window open and refresh this connection.</p>
+        <p>Your accounts and mappings will appear here directly. You do not need to add them again.</p>
+      </div>
+    </section>
+    <section id="accounts" class="view" hidden>
+      <div class="page-heading"><div><p class="eyebrow">YOUR EXISTING PROFILES</p><h1>GitHub accounts</h1><p class="subtitle">The same accounts you manage in VS Code.</p></div>
+        <button class="primary" data-action="browserLogin">Sign in with browser</button></div>
+      <p class="small">Browser login detects your account details. Finish the login and profile-name prompt in VS Code.</p>
+      <div id="account-list" class="account-grid"></div>
+      <p><button class="quiet" data-action="addAccount">Add with token or manual setup…</button></p>
+    </section>
+    <section id="projects" class="view" hidden>
+      <div class="page-heading"><div><p class="eyebrow">SHARED WITH THE EXTENSION</p><h1>Project mappings</h1><p class="subtitle">Folder and repository rules use the extension’s existing account routing.</p></div><button class="primary" data-action="mapProject">Add mapping…</button></div>
+      <div id="mapping-list" class="project-table"></div>
+    </section>
+    <section id="tools" class="view" hidden>
+      <h1>Workspace tools</h1><p class="subtitle">Actions apply to the selected VS Code window. Prompts and reports open there.</p>
+      <div class="agent-panel"><h2>Open folders</h2><pre id="folders"></pre>
+        <button class="quiet" data-action="sync">Apply mapped account</button>
+        <button class="quiet" data-action="health">Authentication health</button>
+        <button class="quiet" data-action="diagnostics">Run diagnostics</button>
+        <button class="quiet" data-action="dashboard">Open VS Code dashboard</button>
+      </div>
+      <p class="small">AI-agent authentication remains a separate planned milestone.</p>
+    </section>
+    <footer>Live extension data · Local connection · No token copies</footer>
+  </main>
+</body></html>

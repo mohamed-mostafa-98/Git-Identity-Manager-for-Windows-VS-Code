@@ -23,10 +23,11 @@ export class RepositoryMapper {
         const normalizedRepoPath = path.normalize(repo.rootPath).toLowerCase();
 
         // 1. Check direct folder path mappings
-        for (const mapping of mappings) {
+        for (const mapping of [...mappings].sort((a, b) => b.pattern.length - a.pattern.length)) {
             if (mapping.isPathPattern) {
                 const normalizedPattern = path.normalize(mapping.pattern).toLowerCase();
-                if (normalizedRepoPath.startsWith(normalizedPattern)) {
+                const relative = path.relative(normalizedPattern, normalizedRepoPath);
+                if (relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative))) {
                     const profile = this.profileManager.getProfileById(mapping.profileId);
                     if (profile) {
                         Logger.info(`Mapped repo path '${repo.rootPath}' to profile '${profile.displayName}' via path pattern '${mapping.pattern}'`);
@@ -41,8 +42,9 @@ export class RepositoryMapper {
         for (const mapping of mappings) {
             if (!mapping.isPathPattern) {
                 const pattern = mapping.pattern.toLowerCase().trim();
+                const escaped = pattern.split('*').map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
                 if (
-                    fullRepoSpec.includes(pattern) ||
+                    new RegExp(`^${escaped}$`).test(fullRepoSpec) ||
                     repo.owner.toLowerCase() === pattern ||
                     pattern === `${repo.hostname}/${repo.owner}`.toLowerCase()
                 ) {

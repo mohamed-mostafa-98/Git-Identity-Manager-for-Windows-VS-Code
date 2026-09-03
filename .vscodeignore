@@ -4,3 +4,7 @@ src/**
 node_modules/**
 tsconfig.json
 *.vsix
+desktop/**
+AGENTS.md
+.playwright-mcp/**
+out/test/**

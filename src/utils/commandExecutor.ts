@@ -14,7 +14,8 @@ export class CommandExecutor {
     public static async execute(
         command: string,
         args: string[],
-        options: ExecFileOptions = {}
+        options: ExecFileOptions = {},
+        input?: string
     ): Promise<CommandResult> {
         return new Promise((resolve) => {
             const execOptions: ExecFileOptions = {
@@ -23,7 +24,7 @@ export class CommandExecutor {
                 ...options
             };
 
-            execFile(command, args, execOptions, (error, stdout, stderr) => {
+            const child = execFile(command, args, execOptions, (error, stdout, stderr) => {
                 const stdoutStr = (stdout || '').toString().trim();
                 const stderrStr = (stderr || '').toString().trim();
                 const exitCode = error ? (error.code && typeof error.code === 'number' ? error.code : 1) : 0;
@@ -33,11 +34,14 @@ export class CommandExecutor {
                 }
 
                 resolve({
-                    stdout: stdoutStr,
-                    stderr: stderrStr,
+                    // Never return credential-helper output to callers or logs.
+                    stdout: input === undefined ? stdoutStr : '',
+                    stderr: input === undefined ? stderrStr : '',
                     exitCode
                 });
             });
+            child.stdin?.on('error', () => child.kill());
+            child.stdin?.end(input);
         });
     }
 }

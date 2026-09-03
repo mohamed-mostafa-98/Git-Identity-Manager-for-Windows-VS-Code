@@ -28,7 +28,8 @@ const vscode = __importStar(require("vscode"));
 const AccountProfile_1 = require("../models/AccountProfile");
 const logger_1 = require("../utils/logger");
 class PushGuardService {
-    constructor(profileManager, repoDetector, repoMapper) {
+    constructor(profileManager, repoDetector, repoMapper, applyProfile) {
+        this.applyProfile = applyProfile;
         this.profileManager = profileManager;
         this.repoDetector = repoDetector;
         this.repoMapper = repoMapper;
@@ -61,7 +62,7 @@ class PushGuardService {
             if (mode === AccountProfile_1.PushGuardMode.Strict) {
                 const choice = await vscode.window.showErrorMessage(message, { modal: true }, `Switch to ${expectedName}`, 'Cancel Push');
                 if (choice === `Switch to ${expectedName}`) {
-                    await this.profileManager.setActiveProfile(expectedProfile.id);
+                    await this.applyProfile(expectedProfile.id);
                     return true;
                 }
                 return false; // Block push
@@ -70,7 +71,7 @@ class PushGuardService {
                 // Mode === Warn
                 const choice = await vscode.window.showWarningMessage(message, `Switch to ${expectedName}`, 'Continue Anyway', 'Cancel Push');
                 if (choice === `Switch to ${expectedName}`) {
-                    await this.profileManager.setActiveProfile(expectedProfile.id);
+                    await this.applyProfile(expectedProfile.id);
                     return true;
                 }
                 else if (choice === 'Continue Anyway') {

@@ -28,7 +28,7 @@ class SecretStorageService {
         }
         catch (error) {
             logger_1.Logger.error(`Failed to retrieve secret token for profile: ${profileId}`, error);
-            return undefined;
+            throw new Error('Secure token storage is unavailable. Unlock your Windows session and retry.');
         }
     }
     /**

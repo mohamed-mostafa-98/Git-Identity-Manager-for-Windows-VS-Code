@@ -1,0 +1,2 @@
+[     340ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:4173/favicon.ico:0
+[   59819ms] [ERROR] Pattern attribute value [A-Za-z0-9][A-Za-z0-9-]* is not a valid regular expression: Uncaught SyntaxError: Invalid regular expression: /[A-Za-z0-9][A-Za-z0-9-]*/v: Invalid character class @ http://127.0.0.1:4173/:0

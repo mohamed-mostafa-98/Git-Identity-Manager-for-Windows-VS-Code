@@ -55,7 +55,7 @@ export class QuickPickMenu {
         if (!selected) return undefined;
 
         if (selected.profileId) {
-            return await this.profileManager.setActiveProfile(selected.profileId);
+            return this.profileManager.getProfileById(selected.profileId);
         } else if ((selected as any).openDashboard) {
             vscode.commands.executeCommand('githubAccountManager.openDashboard');
             return undefined;
@@ -76,6 +76,12 @@ export class QuickPickMenu {
                 isBrowser: true
             },
             {
+                label: '$(key) Personal Access Token',
+                description: 'Save a GitHub token securely for repeated Git operations',
+                isBrowser: false,
+                isToken: true
+            },
+            {
                 label: '$(settings-gear) Manual Profile Setup',
                 description: 'Manually configure username, email, and SSH/HTTPS auth details',
                 isBrowser: false
@@ -87,17 +93,71 @@ export class QuickPickMenu {
 
         if (!setupChoice) return undefined;
 
-        if (setupChoice.isBrowser) {
+        if ('isToken' in setupChoice && setupChoice.isToken) {
+            return this.addAccountViaToken();
+        } else if (setupChoice.isBrowser) {
             return await this.addAccountViaBrowser();
         } else {
             return await this.addAccountManually();
         }
     }
 
+    public async saveToken(profileId?: string): Promise<AccountProfile | undefined> {
+        const profiles = this.profileManager.getProfiles().filter(p =>
+            p.authenticationMethod === AuthenticationMethod.HTTPS || p.authenticationMethod === AuthenticationMethod.BROWSER_OAUTH);
+        const selected = profileId ? profiles.find(p => p.id === profileId) :
+            (await vscode.window.showQuickPick(profiles.map(profile => ({
+                label: profile.displayName, description: `@${profile.githubUsername}`, profile
+            })), { title: 'Account to update token for' }))?.profile;
+        if (!selected) {
+            if (!profiles.length) vscode.window.showInformationMessage('Add an HTTPS account first using GitHub: Add Account Profile.');
+            return undefined;
+        }
+        const token = await this.promptToken();
+        if (!token) return undefined;
+        await this.profileManager.saveProfile(selected, token);
+        vscode.window.showInformationMessage(`Token saved securely for @${selected.githubUsername}.`);
+        return selected;
+    }
+
+    private async promptToken(): Promise<string | undefined> {
+        const token = await vscode.window.showInputBox({
+            title: 'GitHub Personal Access Token', password: true, ignoreFocusOut: true,
+            prompt: 'Paste a token belonging to this account with access to your repositories. Stored in secure credential storage.',
+            validateInput: value => /^[A-Za-z0-9_]+$/.test(value.trim()) ? null : 'Enter a token without spaces or line breaks.'
+        });
+        return token?.trim() || undefined;
+    }
+
+    private async addAccountViaToken(): Promise<AccountProfile | undefined> {
+        const token = await this.promptToken();
+        if (!token) return undefined;
+        const user = await this.browserAuth.fetchGitHubUserProfile(token);
+        if (!user) throw new Error('Could not verify the token. Check its validity and your connection.');
+        const displayName = await vscode.window.showInputBox({
+            title: `Profile for @${user.username}`, prompt: 'Name this account (Personal, Work, Client)',
+            value: user.displayName || user.username
+        });
+        if (!displayName?.trim()) return undefined;
+        const email = await vscode.window.showInputBox({
+            title: 'Git commit email', value: user.email || `${user.username}@users.noreply.github.com`,
+            validateInput: value => value.includes('@') ? null : 'Enter your Git commit email.'
+        });
+        if (!email) return undefined;
+        const profile: AccountProfile = {
+            id: `prof_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            displayName: displayName.trim(), githubUsername: user.username, githubEmail: email.trim(),
+            authenticationMethod: AuthenticationMethod.HTTPS,
+            createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+        };
+        await this.profileManager.saveProfile(profile, token);
+        return profile;
+    }
+
     /**
      * Login through Browser OAuth flow.
      */
-    private async addAccountViaBrowser(): Promise<AccountProfile | undefined> {
+    public async addAccountViaBrowser(): Promise<AccountProfile | undefined> {
         const userInfo = await this.browserAuth.loginViaBrowser();
         if (!userInfo) return undefined;
 
@@ -110,18 +170,18 @@ export class QuickPickMenu {
 
         if (!displayName) return undefined;
 
+        const existing = this.profileManager.getProfileByUsername(userInfo.username);
         const newProfile: AccountProfile = {
-            id: `prof_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            id: existing?.id || `prof_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
             displayName: displayName.trim(),
             githubUsername: userInfo.username,
             githubEmail: userInfo.email,
             authenticationMethod: AuthenticationMethod.BROWSER_OAUTH,
-            createdAt: new Date().toISOString(),
+            createdAt: existing?.createdAt || new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
         await this.profileManager.saveProfile(newProfile, userInfo.accessToken);
-        await this.profileManager.setActiveProfile(newProfile.id);
 
         vscode.window.showInformationMessage(`✓ Authenticated via Browser! Profile '${newProfile.displayName}' (@${newProfile.githubUsername}) created.`);
         return newProfile;
@@ -204,7 +264,6 @@ export class QuickPickMenu {
         };
 
         await this.profileManager.saveProfile(newProfile);
-        await this.profileManager.setActiveProfile(newProfile.id);
 
         vscode.window.showInformationMessage(`✓ Account profile '${newProfile.displayName}' added successfully!`);
         return newProfile;

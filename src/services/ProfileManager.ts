@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { AccountProfile, RepositoryMapping, AuthenticationMethod } from '../models/AccountProfile';
 import { SecretStorageService } from './SecretStorageService';
 import { Logger } from '../utils/logger';
+import { BrowserAuthStrategy } from './BrowserAuthStrategy';
 
 export class ProfileManager {
     private static readonly PROFILES_KEY = 'github_account_profiles_v1';
@@ -41,6 +42,24 @@ export class ProfileManager {
      * Adds or updates an account profile.
      */
     public async saveProfile(profile: AccountProfile, token?: string): Promise<void> {
+        if (typeof profile.displayName !== 'string' || !profile.displayName.trim() ||
+            typeof profile.githubEmail !== 'string' || !profile.githubEmail.includes('@') ||
+            typeof profile.githubUsername !== 'string' || !/^[A-Za-z0-9-]+$/.test(profile.githubUsername) ||
+            typeof profile.id !== 'string' || !/^[A-Za-z0-9_-]+$/.test(profile.id) ||
+            !Object.values(AuthenticationMethod).includes(profile.authenticationMethod)) {
+            throw new Error('Enter a valid profile name, GitHub username, email and authentication method.');
+        }
+        if ([profile.displayName, profile.githubEmail, profile.sshProfileHostAlias, profile.sshKeyPath].some(value =>
+            value !== undefined && (typeof value !== 'string' || /[\r\n\0]/.test(value)))) {
+            throw new Error('Profile fields cannot contain line breaks or control characters.');
+        }
+        if (token !== undefined) {
+            const user = await new BrowserAuthStrategy().fetchGitHubUserProfile(token);
+            if (!user || user.username.toLowerCase() !== profile.githubUsername.toLowerCase()) {
+                throw new Error('Token verification failed. Check the connection, token validity and selected GitHub account.');
+            }
+            await this.secretService.storeToken(profile.id, token);
+        }
         const profiles = this.getProfiles();
         const existingIndex = profiles.findIndex(p => p.id === profile.id);
 
@@ -60,9 +79,6 @@ export class ProfileManager {
         await this.globalState.update(ProfileManager.PROFILES_KEY, profiles);
         Logger.info(`Saved account profile: ${profile.displayName} (@${profile.githubUsername})`);
 
-        if (token) {
-            await this.secretService.storeToken(profile.id, token);
-        }
     }
 
     /**
@@ -129,8 +145,12 @@ export class ProfileManager {
     }
 
     public async saveMapping(profileId: string, pattern: string, isPathPattern: boolean): Promise<RepositoryMapping> {
+        if (!this.getProfileById(profileId) || typeof pattern !== 'string' || !pattern.trim() || typeof isPathPattern !== 'boolean') {
+            throw new Error('Select an existing account and enter a repository path or pattern.');
+        }
+        pattern = pattern.trim();
         const mappings = this.getMappings();
-        const existingIndex = mappings.findIndex(m => m.pattern.toLowerCase() === pattern.toLowerCase());
+        const existingIndex = mappings.findIndex(m => m.isPathPattern === isPathPattern && m.pattern.toLowerCase() === pattern.toLowerCase());
 
         const newMapping: RepositoryMapping = {
             id: `map_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,

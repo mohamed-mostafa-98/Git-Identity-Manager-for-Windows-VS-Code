@@ -33,7 +33,6 @@ const GitIdentityManager_1 = require("./services/GitIdentityManager");
 const HTTPSAuthStrategy_1 = require("./services/HTTPSAuthStrategy");
 const SSHAuthStrategy_1 = require("./services/SSHAuthStrategy");
 const GitHubCliStrategy_1 = require("./services/GitHubCliStrategy");
-const BrowserAuthStrategy_1 = require("./services/BrowserAuthStrategy");
 const PushGuardService_1 = require("./services/PushGuardService");
 const DiagnosticsService_1 = require("./services/DiagnosticsService");
 const StatusBarController_1 = require("./ui/StatusBarController");
@@ -42,6 +41,7 @@ const QuickPickMenu_1 = require("./ui/QuickPickMenu");
 const DashboardWebview_1 = require("./ui/DashboardWebview");
 const logger_1 = require("./utils/logger");
 const AccountProfile_1 = require("./models/AccountProfile");
+const DesktopBridge_1 = require("./services/DesktopBridge");
 let statusBarController;
 async function activate(context) {
     logger_1.Logger.initialize('GitHub Account Manager');
@@ -55,8 +55,6 @@ async function activate(context) {
     const httpsAuthStrategy = new HTTPSAuthStrategy_1.HTTPSAuthStrategy();
     const sshAuthStrategy = new SSHAuthStrategy_1.SSHAuthStrategy();
     const ghCliStrategy = new GitHubCliStrategy_1.GitHubCliStrategy();
-    const browserAuthStrategy = new BrowserAuthStrategy_1.BrowserAuthStrategy();
-    const pushGuardService = new PushGuardService_1.PushGuardService(profileManager, repoDetector, repoMapper);
     const diagnosticsService = new DiagnosticsService_1.DiagnosticsService(profileManager, repoDetector, ghCliStrategy);
     // UI Controllers & Tree Views
     statusBarController = new StatusBarController_1.StatusBarController(profileManager);
@@ -75,45 +73,74 @@ async function activate(context) {
     /**
      * Automatic account profile application for open workspace repository.
      */
-    const syncWorkspaceProfile = async () => {
-        const config = vscode.workspace.getConfiguration('githubAccountManager');
-        const autoSwitch = config.get('autoSwitchOnWorkspaceOpen', true);
-        if (!autoSwitch || !vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+    const applyWorkspaceProfile = async (profileId) => {
+        if (!vscode.workspace.isTrusted)
+            throw new Error('Trust this workspace before applying account credentials.');
+        if (!vscode.workspace.workspaceFolders?.length) {
+            if (profileId)
+                await profileManager.setActiveProfile(profileId);
+            refreshUI();
             return;
         }
         const rootFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
         const repo = await repoDetector.detectRepository(rootFolder);
         if (!repo) {
-            logger_1.Logger.info(`No Git remote detected in workspace: ${rootFolder}`);
-            return;
+            throw new Error('Open a Git repository with a remote before assigning an account.');
         }
-        const mappedProfile = repoMapper.resolveProfileForRepository(repo);
+        const mappedProfile = profileId ? profileManager.getProfileById(profileId) : repoMapper.resolveProfileForRepository(repo);
+        if (profileId && !mappedProfile)
+            throw new Error('The selected account no longer exists.');
         if (mappedProfile) {
-            logger_1.Logger.info(`Auto-switch: Activating profile '${mappedProfile.displayName}' for repo ${repo.owner}/${repo.repoName}`);
-            await profileManager.setActiveProfile(mappedProfile.id);
-            // Apply Git Commit Identity
-            await gitIdentityManager.setLocalIdentity(repo.rootPath, mappedProfile);
             // Apply Authentication Strategy
-            if (mappedProfile.authenticationMethod === AccountProfile_1.AuthenticationMethod.BROWSER_OAUTH) {
-                await browserAuthStrategy.configureBrowserAuth(repo.rootPath, mappedProfile);
-            }
-            else if (mappedProfile.authenticationMethod === AccountProfile_1.AuthenticationMethod.HTTPS) {
-                await httpsAuthStrategy.configureHTTPSAuth(repo.rootPath, mappedProfile);
+            let authenticated = false;
+            if (mappedProfile.authenticationMethod === AccountProfile_1.AuthenticationMethod.BROWSER_OAUTH || mappedProfile.authenticationMethod === AccountProfile_1.AuthenticationMethod.HTTPS) {
+                const token = await secretService.getToken(mappedProfile.id);
+                authenticated = await httpsAuthStrategy.configureHTTPSAuth(repo.rootPath, mappedProfile, repo.remoteUrl, token);
             }
             else if (mappedProfile.authenticationMethod === AccountProfile_1.AuthenticationMethod.SSH) {
                 const hostAlias = await sshAuthStrategy.ensureSSHHostAlias(mappedProfile);
-                await sshAuthStrategy.bindRepoRemoteToHostAlias(repo.rootPath, hostAlias);
+                authenticated = await sshAuthStrategy.bindRepoRemoteToHostAlias(repo.rootPath, hostAlias);
             }
             else if (mappedProfile.authenticationMethod === AccountProfile_1.AuthenticationMethod.GITHUB_CLI) {
-                await ghCliStrategy.switchAccount(mappedProfile.githubUsername);
+                authenticated = await ghCliStrategy.switchAccount(mappedProfile.githubUsername);
             }
+            if (!authenticated)
+                throw new Error('Authentication setup failed. The account assignment was not changed.');
+            if (!await gitIdentityManager.setLocalIdentity(repo.rootPath, mappedProfile)) {
+                throw new Error('Authentication was configured, but Git identity could not be updated. Retry before committing.');
+            }
+            if (profileId)
+                await profileManager.saveMapping(mappedProfile.id, repo.rootPath, true);
+            await profileManager.setActiveProfile(mappedProfile.id);
             refreshUI();
         }
     };
+    // ponytail: serialize changes in this window; use per-repository queues for multi-root support.
+    let syncQueue = Promise.resolve();
+    const syncWorkspaceProfile = (profileId) => {
+        const result = syncQueue.then(() => applyWorkspaceProfile(profileId));
+        syncQueue = result.catch(() => { });
+        return result;
+    };
+    const showFailure = (error) => {
+        const message = error instanceof Error ? error.message : 'Account operation failed. Please retry.';
+        vscode.window.showErrorMessage(message);
+    };
+    const autoSync = async () => {
+        if (!vscode.workspace.isTrusted || !vscode.workspace.getConfiguration('githubAccountManager').get('autoSwitchOnWorkspaceOpen', true))
+            return;
+        try {
+            await syncWorkspaceProfile();
+        }
+        catch (error) {
+            showFailure(error);
+        }
+    };
+    const pushGuardService = new PushGuardService_1.PushGuardService(profileManager, repoDetector, repoMapper, syncWorkspaceProfile);
     // Run workspace sync on activation
-    syncWorkspaceProfile();
+    void autoSync();
     // Listen to workspace folder changes
-    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => syncWorkspaceProfile()));
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => autoSync()));
     // Register Commands
     context.subscriptions.push(vscode.commands.registerCommand('githubAccountManager.openDashboard', () => {
         DashboardWebview_1.DashboardWebview.createOrShow(context.extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncWorkspaceProfile);
@@ -128,18 +155,41 @@ async function activate(context) {
             refreshUI();
             vscode.window.showInformationMessage(`Removed repository mapping rule.`);
         }
-    }), vscode.commands.registerCommand('githubAccountManager.switchAccount', async () => {
-        const switched = await quickPickMenu.showAccountSwitcher();
-        if (switched) {
-            await syncWorkspaceProfile();
-            refreshUI();
-            vscode.window.showInformationMessage(`Active GitHub Account: ${switched.displayName} (@${switched.githubUsername})`);
+    }), vscode.commands.registerCommand('githubAccountManager.switchAccount', async (item) => {
+        try {
+            const switched = item?.profile ? profileManager.getProfileById(item.profile.id) : await quickPickMenu.showAccountSwitcher();
+            if (switched) {
+                await syncWorkspaceProfile(switched.id);
+                refreshUI();
+                vscode.window.showInformationMessage(`Active GitHub Account: ${switched.displayName} (@${switched.githubUsername})`);
+            }
+        }
+        catch (error) {
+            showFailure(error);
         }
     }), vscode.commands.registerCommand('githubAccountManager.addAccount', async () => {
-        const added = await quickPickMenu.showAddAccountWizard();
-        if (added) {
-            await syncWorkspaceProfile();
-            refreshUI();
+        try {
+            const added = await quickPickMenu.showAddAccountWizard();
+            if (added) {
+                refreshUI();
+                vscode.window.showInformationMessage('Account saved. Use GitHub: Map Project to Account to assign a repository.');
+            }
+        }
+        catch (error) {
+            showFailure(error);
+        }
+    }), vscode.commands.registerCommand('githubAccountManager.saveToken', async (profileId) => {
+        try {
+            if (!vscode.workspace.isTrusted)
+                throw new Error('Trust this workspace before saving authentication.');
+            const saved = await quickPickMenu.saveToken(profileId);
+            const folder = vscode.workspace.workspaceFolders?.[0];
+            const repository = saved && folder ? await repoDetector.detectRepository(folder.uri.fsPath) : undefined;
+            if (repository && repoMapper.resolveProfileForRepository(repository)?.id === saved?.id)
+                await syncWorkspaceProfile();
+        }
+        catch (error) {
+            showFailure(error);
         }
     }), vscode.commands.registerCommand('githubAccountManager.removeAccount', async (item) => {
         const targetId = item?.profile?.id || profileManager.getActiveProfileId();
@@ -266,6 +316,66 @@ async function activate(context) {
     }
     catch (e) {
         logger_1.Logger.warn('Could not bind VS Code Git API push guard listener', e);
+    }
+    // Keep VS Code as the source of truth; the companion never receives vault tokens.
+    if (vscode.env?.uiKind === vscode.UIKind?.Desktop && vscode.env && !vscode.env.remoteName) {
+        try {
+            const bridge = await (0, DesktopBridge_1.startDesktopBridge)(vscode.workspace.name || 'VS Code — no folder', async (request) => {
+                try {
+                    if (request.action !== 'snapshot') {
+                        if (!vscode.workspace.isTrusted)
+                            throw new Error('Trust the VS Code workspace before changing accounts.');
+                        switch (request.action) {
+                            case 'browserLogin':
+                                await quickPickMenu.addAccountViaBrowser();
+                                break;
+                            case 'addAccount':
+                                await quickPickMenu.showAddAccountWizard();
+                                break;
+                            case 'saveToken':
+                                await quickPickMenu.saveToken(request.id);
+                                break;
+                            case 'switchProfile':
+                                await syncWorkspaceProfile(request.id);
+                                break;
+                            case 'sync':
+                                await syncWorkspaceProfile();
+                                break;
+                            case 'removeProfile':
+                                await vscode.commands.executeCommand('githubAccountManager.removeAccount', { profile: { id: request.id } });
+                                break;
+                            case 'removeMapping': {
+                                const mapping = profileManager.getMappings().find(row => row.id === request.id);
+                                if (!mapping)
+                                    throw new Error('Mapping no longer exists.');
+                                await vscode.commands.executeCommand('githubAccountManager.removeMapping', { mapping });
+                                break;
+                            }
+                            default: {
+                                const commands = { mapProject: 'mapProject', diagnostics: 'diagnostics', health: 'validateAuthentication', dashboard: 'openDashboard' };
+                                await vscode.commands.executeCommand(`githubAccountManager.${commands[request.action]}`);
+                            }
+                        }
+                        refreshUI();
+                    }
+                    return {
+                        profiles: profileManager.getProfiles().map(p => ({ id: p.id, displayName: p.displayName, githubUsername: p.githubUsername,
+                            githubEmail: p.githubEmail, authenticationMethod: p.authenticationMethod })),
+                        mappings: profileManager.getMappings().map(m => ({ id: m.id, profileId: m.profileId, pattern: m.pattern, isPathPattern: m.isPathPattern })),
+                        activeProfileId: profileManager.getActiveProfileId(), trusted: vscode.workspace.isTrusted,
+                        folders: vscode.workspace.workspaceFolders?.map(folder => folder.uri.fsPath) || []
+                    };
+                }
+                catch (error) {
+                    showFailure(error);
+                    throw error;
+                }
+            });
+            context.subscriptions.push(bridge);
+        }
+        catch {
+            logger_1.Logger.warn('Desktop companion connection could not start. Reload the VS Code window to retry.');
+        }
     }
     logger_1.Logger.info('GitHub Account & Git Identity Manager extension successfully activated.');
 }

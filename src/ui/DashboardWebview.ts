@@ -23,7 +23,7 @@ export class DashboardWebview {
         private repoMapper: RepositoryMapper,
         private gitIdentityManager: GitIdentityManager,
         private diagnosticsService: DiagnosticsService,
-        private syncCallback: () => Promise<void>
+        private syncCallback: (profileId?: string) => Promise<void>
     ) {
         this._panel = panel;
         this._extensionUri = extensionUri;
@@ -40,10 +40,13 @@ export class DashboardWebview {
                 try {
                     switch (message.command) {
                         case 'switchProfile':
-                            await this.profileManager.setActiveProfile(message.profileId);
-                            await this.syncCallback();
+                            await this.syncCallback(message.profileId);
                             vscode.window.showInformationMessage(`Active profile switched.`);
                             await this._updateWebview();
+                            break;
+
+                        case 'saveToken':
+                            await vscode.commands.executeCommand('githubAccountManager.saveToken', message.profileId);
                             break;
 
                         case 'addProfile':
@@ -60,10 +63,6 @@ export class DashboardWebview {
                             };
 
                             await this.profileManager.saveProfile(newProfile, message.token || undefined);
-                            if (!this.profileManager.getActiveProfileId()) {
-                                await this.profileManager.setActiveProfile(newProfile.id);
-                            }
-                            await this.syncCallback();
                             vscode.window.showInformationMessage(`Added GitHub profile: ${newProfile.displayName}`);
                             await this._updateWebview();
                             break;
@@ -144,7 +143,7 @@ export class DashboardWebview {
         repoMapper: RepositoryMapper,
         gitIdentityManager: GitIdentityManager,
         diagnosticsService: DiagnosticsService,
-        syncCallback: () => Promise<void>
+        syncCallback: (profileId?: string) => Promise<void>
     ): DashboardWebview {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
@@ -552,7 +551,7 @@ export class DashboardWebview {
             </div>
             <div class="form-group" id="pat-field" style="display:none;">
                 <label>Personal Access Token (PAT)</label>
-                <input type="password" id="prof-token" class="form-control" placeholder="ghp_xxxxxxxxxxxx">
+                <input type="password" id="prof-token" class="form-control" autocomplete="off" placeholder="GitHub personal access token">
             </div>
             <div class="form-group" id="ssh-field" style="display:none;">
                 <label>SSH Host Alias (e.g. github.com-work)</label>
@@ -590,7 +589,8 @@ export class DashboardWebview {
                         <span>${p.lastUsedAt ? new Date(p.lastUsedAt).toLocaleDateString() : 'Never'}</span>
                     </div>
                     <div class="card-actions">
-                        ${!isActive ? `<button class="btn" onclick="sendMessage('switchProfile', {profileId: '${p.id}'})">Activate Profile</button>` : ''}
+                        <button class="btn" onclick="sendMessage('switchProfile', {profileId: '${p.id}'})">Use for This Project</button>
+                        ${p.authenticationMethod === AuthenticationMethod.HTTPS || p.authenticationMethod === AuthenticationMethod.BROWSER_OAUTH ? `<button class="btn btn-secondary" onclick="sendMessage('saveToken', {profileId: '${p.id}'})">Save / Update Token</button>` : ''}
                         <button class="btn btn-secondary" onclick="sendMessage('validateAuth', {profileId: '${p.id}'})">Health</button>
                         <button class="btn btn-danger" onclick="sendMessage('removeProfile', {profileId: '${p.id}'})">Remove</button>
                     </div>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Git Identity Manager</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">↗</span><div>Git Identity<span>YOUR DEVELOPER WORKSPACE</span></div></div>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <button class="nav-button active" data-view="overview"><span aria-hidden="true">◫</span> Overview</button>
+      <button class="nav-button" data-view="accounts"><span aria-hidden="true">◎</span> Accounts <span id="nav-accounts" class="count">0</span></button>
+      <button class="nav-button" data-view="projects"><span aria-hidden="true">▤</span> Projects <span id="nav-projects" class="count">0</span></button>
+      <button class="nav-button" data-view="agents"><span aria-hidden="true">⌘</span> Agent access</button>
+    </nav>
+    <div class="sidebar-bottom"><span class="local-dot"></span> Local workspace<div>Open source · Desktop preview 0.1</div></div>
+  </aside>
+  <main>
+    <header><div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb-view">Overview</strong></div><button id="refresh" class="quiet">↻ Refresh</button></header>
+    <div id="notice" role="status" aria-live="polite" hidden></div>
+    <section id="overview" class="view">
+      <div class="page-heading"><div><p class="eyebrow">A CLEARER VIEW OF YOUR GITHUB WORK</p><h1>Every project. The right account.</h1><p class="subtitle">Keep your personal, work, and client identities organized in one place.</p></div><button class="primary add-project">+ Add project</button></div>
+      <div class="stats"><article><span>GitHub accounts</span><strong id="stat-accounts">0</strong><small>Profiles in this workspace</small></article><article><span>Local projects</span><strong id="stat-projects">0</strong><small>Repositories you have added</small></article><article><span>Account assignments</span><strong id="stat-assigned">0</strong><small>Projects with an explicit account</small></article></div>
+      <div class="section-heading"><h2>Your projects</h2><button class="text-button" data-view="projects">View all projects →</button></div>
+      <div id="overview-projects"></div>
+      <div class="next-step"><span class="step-icon" aria-hidden="true">↗</span><div><h3>Built for your next step</h3><p>This preview organizes accounts and projects. Secure desktop login is next; your existing VS Code authentication stays separate.</p></div><span class="pill">Milestone 1</span></div>
+    </section>
+    <section id="accounts" class="view" hidden>
+      <div class="page-heading"><div><p class="eyebrow">YOUR IDENTITIES</p><h1>GitHub accounts</h1><p class="subtitle">Add a name, username, and commit email. No token needed for this preview.</p></div><button class="primary add-account">+ Add account</button></div>
+      <div id="account-list" class="account-grid"></div>
+    </section>
+    <section id="projects" class="view" hidden>
+      <div class="page-heading"><div><p class="eyebrow">PROJECT BY PROJECT</p><h1>Local projects</h1><p class="subtitle">Choose the account each repository should use. Files and Git settings stay untouched.</p></div><button class="primary add-project">+ Add project</button></div>
+      <div id="project-list"></div>
+    </section>
+    <section id="agents" class="view" hidden>
+      <div class="page-heading"><div><p class="eyebrow">EXPLICIT ACCOUNT CONTEXT</p><h1>A clear path for your AI tools.</h1><p class="subtitle">An agent should know which account belongs to a project before it acts.</p></div><span class="pill">Read-only preview</span></div>
+      <article class="agent-panel"><div class="flow"><span>Your project</span><b>→</b><span>Assigned account</span><b>→</b><span>Agent context</span></div><h2>Account context is ready. Authentication comes next.</h2><p>Inspect a project's assignment below to get a token-free context for local tools. This does not grant GitHub access or change a hosted connector's signed-in account.</p><div id="agent-projects"></div></article>
+      <div class="roadmap"><article><span class="pill green">Current</span><h3>01 · Visual workspace</h3><p>Accounts, projects, and explicit assignments.</p></article><article><span class="pill">Next</span><h3>02 · Secure login</h3><p>OS-backed credentials and account verification.</p></article><article><span class="pill">Planned</span><h3>03 · Agent connector</h3><p>Authenticated tools scoped to the right project.</p></article></div>
+    </section>
+    <footer><span class="local-dot"></span> Metadata stays on this device. <span>Windows · macOS · Linux design target</span></footer>
+  </main>
+  <dialog id="account-dialog" aria-labelledby="account-title">
+    <form id="account-form"><div class="dialog-heading"><h2 id="account-title">Add a GitHub account</h2><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div><p class="subtitle">Organize an identity now. Secure login arrives in the next milestone.</p>
+      <label>Account name<input name="displayName" placeholder="Work, Personal, or Client" maxlength="80" required></label>
+      <label>GitHub username<input name="githubUsername" placeholder="octocat" maxlength="39" pattern="[A-Za-z0-9][A-Za-z0-9\-]*" required></label>
+      <label>Commit email<input name="githubEmail" type="email" placeholder="you@example.com" maxlength="200" required></label>
+      <p id="form-error" class="form-error" role="alert"></p><div class="dialog-actions"><button type="button" class="quiet close-dialog">Cancel</button><button class="primary" type="submit">Save account</button></div>
+    </form>
+  </dialog>
+  <dialog id="context-dialog" aria-labelledby="context-title"><div class="dialog-heading"><h2 id="context-title">Agent account context</h2><button class="icon-button close-dialog" aria-label="Close">×</button></div><p>Read-only metadata. No credentials or GitHub access are included.</p><pre id="context-output" tabindex="0"></pre><p class="small">Workspace file for the context command:</p><code id="state-file"></code><div class="dialog-actions"><button class="quiet close-dialog">Close</button></div></dialog>
+</body>
+</html>

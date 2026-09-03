@@ -7,14 +7,14 @@ class CommandExecutor {
     /**
      * Safely executes an executable with an array of arguments to prevent shell injection vulnerabilities.
      */
-    static async execute(command, args, options = {}) {
+    static async execute(command, args, options = {}, input) {
         return new Promise((resolve) => {
             const execOptions = {
                 windowsHide: true,
                 maxBuffer: 10 * 1024 * 1024,
                 ...options
             };
-            (0, child_process_1.execFile)(command, args, execOptions, (error, stdout, stderr) => {
+            const child = (0, child_process_1.execFile)(command, args, execOptions, (error, stdout, stderr) => {
                 const stdoutStr = (stdout || '').toString().trim();
                 const stderrStr = (stderr || '').toString().trim();
                 const exitCode = error ? (error.code && typeof error.code === 'number' ? error.code : 1) : 0;
@@ -22,11 +22,14 @@ class CommandExecutor {
                     logger_1.Logger.warn(`Command executed with code ${exitCode}: ${command} ${args.join(' ')}`);
                 }
                 resolve({
-                    stdout: stdoutStr,
-                    stderr: stderrStr,
+                    // Never return credential-helper output to callers or logs.
+                    stdout: input === undefined ? stdoutStr : '',
+                    stderr: input === undefined ? stderrStr : '',
                     exitCode
                 });
             });
+            child.stdin?.on('error', () => child.kill());
+            child.stdin?.end(input);
         });
     }
 }

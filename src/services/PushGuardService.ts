@@ -13,7 +13,8 @@ export class PushGuardService {
     constructor(
         profileManager: ProfileManager,
         repoDetector: RepositoryDetector,
-        repoMapper: RepositoryMapper
+        repoMapper: RepositoryMapper,
+        private applyProfile: (profileId: string) => Promise<void>
     ) {
         this.profileManager = profileManager;
         this.repoDetector = repoDetector;
@@ -60,7 +61,7 @@ export class PushGuardService {
                 );
 
                 if (choice === `Switch to ${expectedName}`) {
-                    await this.profileManager.setActiveProfile(expectedProfile.id);
+                    await this.applyProfile(expectedProfile.id);
                     return true;
                 }
                 return false; // Block push
@@ -74,7 +75,7 @@ export class PushGuardService {
                 );
 
                 if (choice === `Switch to ${expectedName}`) {
-                    await this.profileManager.setActiveProfile(expectedProfile.id);
+                    await this.applyProfile(expectedProfile.id);
                     return true;
                 } else if (choice === 'Continue Anyway') {
                     return true;

@@ -1,0 +1,19 @@
+{
+  "name": "git-identity-desktop",
+  "productName": "Git Identity Manager",
+  "version": "0.2.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Local account and repository workspace for Git Identity Manager",
+  "main": "dist/desktop/src/entry.js",
+  "scripts": {
+    "build": "node ../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "start": "npm run build && electron .",
+    "test": "npm run build && node --test dist/desktop/test/core.test.js",
+    "test:ui": "npm run build && electron test/smoke.cjs && electron --require ./test/launch.cjs .",
+    "context": "node dist/desktop/src/context.js"
+  },
+  "devDependencies": {
+    "electron": "44.1.1"
+  }
+}

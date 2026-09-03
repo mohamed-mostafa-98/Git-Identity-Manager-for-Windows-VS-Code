@@ -29,7 +29,7 @@ export class SecretStorageService {
             return await this.secretStorage.get(`github_token_${profileId}`);
         } catch (error) {
             Logger.error(`Failed to retrieve secret token for profile: ${profileId}`, error);
-            return undefined;
+            throw new Error('Secure token storage is unavailable. Unlock your Windows session and retry.');
         }
     }
 

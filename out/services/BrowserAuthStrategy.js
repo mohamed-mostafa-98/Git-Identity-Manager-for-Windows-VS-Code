@@ -24,19 +24,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BrowserAuthStrategy = void 0;
-const vscode = __importStar(require("vscode"));
 const https = __importStar(require("https"));
 const logger_1 = require("../utils/logger");
-const commandExecutor_1 = require("../utils/commandExecutor");
 class BrowserAuthStrategy {
     /**
      * Triggers GitHub OAuth login via browser.
      * Uses VS Code's authentication provider to open the browser, authenticate user, and acquire OAuth token.
      */
     async loginViaBrowser() {
+        const vscode = require('vscode');
         try {
             logger_1.Logger.info('Triggering GitHub Browser OAuth authentication session...');
-            const session = await vscode.authentication.getSession('github', ['repo', 'user:email', 'read:user', 'workflow'], { createIfNone: true });
+            const session = await vscode.authentication.getSession('github', ['repo', 'user:email', 'read:user', 'workflow'], { forceNewSession: true });
             if (!session) {
                 logger_1.Logger.warn('Browser authentication cancelled or failed: No session returned.');
                 return undefined;
@@ -52,13 +51,7 @@ class BrowserAuthStrategy {
                     accessToken: session.accessToken
                 };
             }
-            // Fallback to session account label if API call fails
-            return {
-                username: session.account.label,
-                email: `${session.account.label}@users.noreply.github.com`,
-                displayName: session.account.label,
-                accessToken: session.accessToken
-            };
+            throw new Error('Could not verify the GitHub account. Check your connection and try again.');
         }
         catch (error) {
             logger_1.Logger.error('Browser authentication error', error);
@@ -67,25 +60,11 @@ class BrowserAuthStrategy {
         }
     }
     /**
-     * Configures Git Credential Manager (GCM) for a browser-authenticated profile.
-     */
-    async configureBrowserAuth(repoPath, profile) {
-        try {
-            // Enable useHttpPath locally for this repo
-            await commandExecutor_1.CommandExecutor.execute('git', ['config', '--local', 'credential.useHttpPath', 'true'], { cwd: repoPath });
-            await commandExecutor_1.CommandExecutor.execute('git', ['config', '--local', 'credential.username', profile.githubUsername], { cwd: repoPath });
-            logger_1.Logger.info(`Configured Browser Auth (GCM HttpPath) for ${profile.githubUsername} at ${repoPath}`);
-            return true;
-        }
-        catch (error) {
-            logger_1.Logger.error(`Error configuring Browser Auth for profile ${profile.githubUsername}`, error);
-            return false;
-        }
-    }
-    /**
      * Queries GitHub API (https://api.github.com/user) for authenticated user profile details.
      */
     async fetchGitHubUserProfile(token) {
+        if (!/^[A-Za-z0-9_]+$/.test(token))
+            return undefined;
         return new Promise((resolve) => {
             const options = {
                 hostname: 'api.github.com',
@@ -104,6 +83,10 @@ class BrowserAuthStrategy {
                     if (res.statusCode === 200) {
                         try {
                             const json = JSON.parse(data);
+                            if (typeof json.login !== 'string' || !/^[A-Za-z0-9-]+$/.test(json.login)) {
+                                resolve(undefined);
+                                return;
+                            }
                             resolve({
                                 username: json.login,
                                 email: json.email || '',
@@ -120,6 +103,7 @@ class BrowserAuthStrategy {
                 });
             });
             req.on('error', () => resolve(undefined));
+            req.setTimeout(15000, () => req.destroy(new Error('GitHub request timed out')));
             req.end();
         });
     }

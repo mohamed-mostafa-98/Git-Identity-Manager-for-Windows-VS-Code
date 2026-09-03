@@ -10,6 +10,10 @@ A production-grade developer tool for **Windows** and **VS Code** that solves th
 
 ---
 
+## Saved login and per-project accounts (1.1.0)
+
+Save a personal access token once, then click **Use for This Project** on an account in the dashboard. Browser OAuth tokens are now also connected to Git Credential Manager. See [Saved authentication setup](SAVED-AUTHENTICATION.md) for installation, token renewal and limitations.
+
 ## ✨ Features & Highlights
 
 - 🎛️ **Interactive Control Panel Dashboard**: Complete visual UI dashboard for managing accounts, repository mappings, local git identities, and system health checks.
@@ -56,7 +60,7 @@ Launch the Control Panel by running `GitHub: Open Control Panel Dashboard` or cl
 
 1. **Clone/Download the repository**:
    ```cmd
-   git clone https://github.com/mohammed-dev/githupe_acount_swicher.git
+   git clone https://github.com/mohamed-mostafa-98/Git-Identity-Manager-for-Windows-VS-Code.git
    cd githupe_acount_swicher
    ```
 
@@ -65,18 +69,18 @@ Launch the Control Panel by running `GitHub: Open Control Panel Dashboard` or cl
    npm install
    npx @vscode/vsce package
    ```
-   *This creates a `.vsix` installer package file: `github-account-manager-1.0.0.vsix`.*
+   *This creates a `.vsix` installer package file: `github-account-manager-1.1.0.vsix`.*
 
 3. **Install into VS Code**:
    - **Via Command Line**:
      ```cmd
-     code --install-extension github-account-manager-1.0.0.vsix
+     code --install-extension github-account-manager-1.1.0.vsix
      ```
    - **Via VS Code UI**:
      - Open VS Code.
      - Go to the **Extensions** view (`Ctrl+Shift+X`).
      - Click the `...` (More Actions) menu at the top right of the Extensions panel.
-     - Select **Install from VSIX...** and choose `github-account-manager-1.0.0.vsix`.
+     - Select **Install from VSIX...** and choose `github-account-manager-1.1.0.vsix`.
 
 ---
 
@@ -205,3 +209,7 @@ For deep architectural and implementation details, explore the full documentatio
 ## 📄 License
 
 MIT License. Developed for software engineers working across multiple GitHub accounts.
+
+## Desktop companion
+
+The Electron + TypeScript desktop is a second view of the same VS Code extension data and actions. Install extension v1.2.0, reload VS Code, then run `npm start --prefix desktop`. Existing profiles and mappings appear directly; browser login uses the extension and keeps tokens in its secure vault. VS Code must remain open. See [Desktop setup](desktop/README.md) and the [milestone plan](DESKTOP-PLAN.md). Authenticated AI-agent tools remain planned.

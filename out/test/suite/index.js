@@ -37,7 +37,8 @@ function run() {
     const testsRoot = path.resolve(__dirname, '..');
     return new Promise((c, e) => {
         const files = [
-            'suite/repoDetector.test.js'
+            'suite/repoDetector.test.js',
+            'suite/authentication.test.js'
         ];
         files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
         try {
