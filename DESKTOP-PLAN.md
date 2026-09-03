@@ -1,5 +1,8 @@
 # Desktop app and account-aware AI access
 
+## v1.2.1 credential-store correction
+GCM 2.6.1 rejected the previous `wincred` backend name as unknown. HTTPSAuthStrategy now sets `wincredman` in both repository configuration and the helper environment. Ten extension tests passed against a clean build; the patched VSIX was checked against that build. The restricted session recognized the corrected backend but could not persist a synthetic vault credential. Outside-sandbox verification and the MOH-82 Linear update were blocked by automatic approval review returning HTTP 404. Pending: install v1.2.1, retry the account switch in the user's local VS Code session, and post this result to Linear when approval review is available. No real GitHub token was used in testing.
+
 ## Revised direction: shared application
 The user clarified that the desktop must use the existing extension data and capabilities. Desktop v0.2.0 therefore connects to extension v1.2.0 through a local authenticated companion bridge. VS Code remains the source of truth for profiles, mapping rules, browser OAuth and secure token storage. The independent M1 registry is retained only for legacy tests/CLI. VS Code must stay open; standalone authentication and real cross-platform/account verification are still pending. The milestones below describe the original roadmap; this shared-data decision supersedes migration to an independent desktop registry.
 

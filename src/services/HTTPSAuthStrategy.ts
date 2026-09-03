@@ -23,7 +23,7 @@ export class HTTPSAuthStrategy {
             ['--add', 'credential.https://github.com.helper', 'manager'],
             ['--replace-all', 'credential.https://github.com.useHttpPath', 'true'],
             ['--replace-all', 'credential.https://github.com.username', profile.githubUsername],
-            ['--replace-all', 'credential.credentialStore', 'wincred']
+            ['--replace-all', 'credential.credentialStore', 'wincredman']
         ]) {
             const result = await CommandExecutor.execute('git', ['config', '--local', ...args], options);
             if (result.exitCode !== 0) throw new Error('Could not configure repository authentication. Check repository write access and retry.');
@@ -32,9 +32,9 @@ export class HTTPSAuthStrategy {
             // Direct invocation avoids arbitrary configured helpers; secrets travel only via stdin.
             const result = await CommandExecutor.execute('git', ['credential-manager', 'store'], {
                 ...options,
-                env: { ...process.env, GCM_CREDENTIAL_STORE: 'wincred', GCM_INTERACTIVE: 'never', GCM_TRACE: '0', GCM_TRACE_SECRETS: '0' }
+                env: { ...process.env, GCM_CREDENTIAL_STORE: 'wincredman', GCM_INTERACTIVE: 'never', GCM_TRACE: '0', GCM_TRACE_SECRETS: '0' }
             }, `protocol=https\nhost=github.com\npath=${url.pathname.slice(1)}\nusername=${profile.githubUsername}\npassword=${token}\n\n`);
-            if (result.exitCode !== 0) throw new Error('Could not save authentication in Windows Credential Manager. Retry from a local Windows session.');
+            if (result.exitCode !== 0) throw new Error('Git Credential Manager could not save the credential. Check GCM installation and Windows vault access. The project account assignment was not changed.');
         }
         return true;
     }

@@ -4,7 +4,7 @@ Electron + TypeScript + native HTML/CSS, MIT licensed. The desktop is another vi
 
 ## Run
 
-1. Install `github-account-manager-1.2.0.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
+1. Install `github-account-manager-1.2.1.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
 2. Keep your local VS Code window open. The extension starts its connection automatically; you can also open **GitHub: Open Control Panel Dashboard**.
 3. From this repository run `npm start --prefix desktop`. Select the VS Code window if more than one is available.
 
