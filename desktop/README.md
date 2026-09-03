@@ -4,7 +4,7 @@ Electron + TypeScript + native HTML/CSS, MIT licensed. The desktop is another vi
 
 ## Run
 
-1. Install `github-account-manager-1.2.1.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
+1. Install `github-account-manager-1.3.0.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
 2. Keep your local VS Code window open. The extension starts its connection automatically; you can also open **GitHub: Open Control Panel Dashboard**.
 3. From this repository run `npm start --prefix desktop`. Select the VS Code window if more than one is available.
 
@@ -20,6 +20,9 @@ For a fresh checkout, install Node.js 22.12+ and Git, then run `npm install` and
 VS Code must stay open. A disconnected app shows connection instructions instead of an independent account registry. Selecting **Use for workspace** changes the Git identity/authentication of the first folder in the selected VS Code window, just as the extension does. Untrusted workspaces allow viewing only. GitHub CLI profiles retain the extension’s global CLI switching behavior; per-project AI-agent authentication is still planned.
 
 ## Data and security
+
+### Token health
+The dashboard's account **Health** button checks that account's saved token against the current repository. The desktop **Authentication health** action uses the repository's mapped account (or the active account if unmapped). Results distinguish missing/expired/wrong-account tokens, repository access, SSO/rate limits and rejection by GitHub's push endpoint. The endpoint check only requests Git service information; it never pushes or changes credentials. Branch rules and workflow permissions can still reject a particular push, and terminal Git may use a different cached credential. SSH/CLI profiles are explicitly reported as outside saved-token verification.
 
 There is no account import or duplicate vault. GitHub tokens never cross the companion connection. The extension serves allowlisted actions over authenticated loopback HTTP with browser-origin requests rejected. A random session capability is stored in a private connection descriptor under `~/.git-identity-manager/connections`; it is read only by the desktop main process and never sent to the renderer. Unix modes are 0700/0600; Windows inherits the user profile’s ACL. This protects against other users and browser pages, not malicious software running as the same OS user. Each window has a distinct connection; stale/disconnected connections are ignored, with no automatic retry of mutations.
 
