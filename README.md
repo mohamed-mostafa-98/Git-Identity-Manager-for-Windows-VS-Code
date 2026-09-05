@@ -18,6 +18,7 @@ The VS Code extension is the source of truth for accounts, project mappings, Git
 - Checks saved-token identity, repository visibility, SSO/rate-limit errors, and GitHub push-endpoint access without pushing.
 - Warns when the active account and project mapping disagree.
 - Shows the same accounts and actions in the desktop companion while VS Code is open.
+- Exposes read-only MCP tools for connected VS Code windows and mapped GitHub repository metadata without returning tokens.
 
 ## Install
 
@@ -128,7 +129,7 @@ Keep the local VS Code window open and select it in the desktop app. Login promp
 
 | Version | Main changes |
 |---|---|
-| **1.6.0** | First authenticated agent CLI: mapped-account repository metadata and permissions without exposing tokens |
+| **1.6.0** | Authenticated agent CLI and MCP tools for mapped-account repository metadata and permissions without exposing tokens |
 | **1.5.0** | Reliable browser account selection, safe legacy username repair, duplicate-account protection, separate token actions, and responsive profile cards |
 | **1.4.0** | Reauthenticate an invalid browser-login profile in place; preserves mappings and accepts safe opaque OAuth/PAT token characters |
 | **1.3.0** | Repository-aware token Health check; identifies invalid/wrong-account tokens, missing repository access, SSO/rate limiting, and push-endpoint rejection without pushing |

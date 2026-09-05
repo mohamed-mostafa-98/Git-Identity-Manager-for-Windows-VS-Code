@@ -22,6 +22,8 @@ VS Code must stay open. A disconnected app shows connection instructions instead
 
 The first MOH-83 agent tool reads authenticated metadata for the repository open in a trusted VS Code window. Find its connection ID in `%USERPROFILE%\.git-identity-manager\connections`, then run `npm run agent:repo --prefix desktop -- --connection <id>`. The mapped account's token stays inside the extension; output contains repository metadata, permissions, and the verified username only. Missing mappings, changed accounts, invalid tokens, and non-GitHub remotes fail closed.
 
+Run `npm run build --prefix desktop` once, then configure an MCP client to launch `node` with the absolute path to `desktop/dist/desktop/src/mcp.js`. The server exposes `list_vscode_windows` and `get_repository_metadata`. Use the first tool to obtain a connection ID, then pass it to the second tool. VS Code must remain open with the target repository trusted and mapped.
+
 ## Data and security
 
 ### Token health

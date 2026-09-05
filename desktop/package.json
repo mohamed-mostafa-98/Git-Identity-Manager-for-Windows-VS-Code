@@ -12,7 +12,8 @@
     "test": "npm run build && node --test dist/desktop/test/core.test.js",
     "test:ui": "npm run build && electron test/smoke.cjs && electron --require ./test/launch.cjs .",
     "context": "node dist/desktop/src/context.js",
-    "agent:repo": "npm run build && node dist/desktop/src/agent.js"
+    "agent:repo": "npm run build && node dist/desktop/src/agent.js",
+    "mcp": "npm run build && node dist/desktop/src/mcp.js"
   },
   "devDependencies": {
     "electron": "44.1.1"

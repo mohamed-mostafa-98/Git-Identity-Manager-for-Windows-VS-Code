@@ -5,6 +5,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { WorkspaceStore } from '../src/workspace';
+import { handle as handleMcp } from '../src/mcp';
 
 const account = (name: string) => ({ displayName: name, githubUsername: name.toLowerCase(), githubEmail: `${name.toLowerCase()}@example.com` });
 function directory(t: any) {
@@ -81,4 +82,15 @@ test('corrupt state is preserved rather than overwritten', t => {
     fs.writeFileSync(file, '{broken');
     assert.throws(() => new WorkspaceStore(file).addAccount(account('Personal')), /unreadable/);
     assert.equal(fs.readFileSync(file, 'utf8'), '{broken');
+});
+
+test('MCP exposes only read-only window and repository tools without credentials', async () => {
+    const fake = { list: async () => [{ id: 'window', label: 'Project' }], call: async () => ({ repository: 'owner/repo', account: '@owner' }) } as any;
+    const initialized: any = await handleMcp({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25' } }, fake);
+    assert.equal(initialized.protocolVersion, '2025-11-25');
+    const listed: any = await handleMcp({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, fake);
+    assert.deepEqual(listed.tools.map((tool: any) => tool.name), ['list_vscode_windows', 'get_repository_metadata']);
+    const result: any = await handleMcp({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'get_repository_metadata', arguments: { connectionId: 'window' } } }, fake);
+    assert.equal(result.structuredContent.repository, 'owner/repo');
+    assert.ok(!JSON.stringify(result).toLowerCase().includes('token'));
 });

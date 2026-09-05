@@ -2,12 +2,13 @@
 
 The source repository contains installable VSIX artifacts for local testing. Install a file through **Extensions → … → Install from VSIX…**, then reload VS Code. Published marketplace/GitHub releases are a future delivery step unless a release page explicitly says otherwise.
 
-## 1.6.0 — Authenticated agent repository metadata
+## 1.6.0 — Authenticated agent repository metadata and MCP
 
 - Adds the first read-only MOH-83 agent CLI for the repository open in a trusted VS Code window.
 - Resolves the repository's assigned account and calls GitHub with its saved credential inside the extension.
 - Returns repository metadata, permissions, and verified username without returning the token.
 - Rejects missing mappings, invalid or mismatched credentials, and non-GitHub remotes.
+- Adds a dependency-free MCP stdio server with `list_vscode_windows` and `get_repository_metadata` tools.
 
 Artifact: `github-account-manager-1.6.0.vsix`
 
