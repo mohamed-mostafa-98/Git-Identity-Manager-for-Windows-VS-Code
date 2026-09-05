@@ -128,7 +128,7 @@ Keep the local VS Code window open and select it in the desktop app. Login promp
 
 | Version | Main changes |
 |---|---|
-| **1.5.0** | Reliable browser account selection, safe legacy username repair, duplicate-account protection, and separate Update Token/Reauthenticate actions |
+| **1.5.0** | Reliable browser account selection, safe legacy username repair, duplicate-account protection, separate token actions, and responsive profile cards |
 | **1.4.0** | Reauthenticate an invalid browser-login profile in place; preserves mappings and accepts safe opaque OAuth/PAT token characters |
 | **1.3.0** | Repository-aware token Health check; identifies invalid/wrong-account tokens, missing repository access, SSO/rate limiting, and push-endpoint rejection without pushing |
 | **1.2.1** | Corrected the current GCM Windows vault backend name to `wincredman` |

@@ -9,6 +9,7 @@ The source repository contains installable VSIX artifacts for local testing. Ins
 - Refuses to merge into an account already owned by another saved profile.
 - Keeps **Save / Update Token** and **Reauthenticate** as separate actions for browser profiles.
 - Lets the Command Palette reauthentication command select a browser profile when one was not supplied by the dashboard.
+- Keeps all profile actions inside responsive dashboard cards at narrow widths.
 
 Artifact: `github-account-manager-1.5.0.vsix`
 

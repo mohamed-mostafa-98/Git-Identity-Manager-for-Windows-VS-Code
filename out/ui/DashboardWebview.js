@@ -379,8 +379,15 @@ class DashboardWebview {
 
         .card-actions {
             margin-top: 16px;
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 8px;
+        }
+
+        .card-actions .btn {
+            justify-content: center;
+            min-width: 0;
+            text-align: center;
         }
 
         .form-panel {
