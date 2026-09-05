@@ -27,3 +27,7 @@ Under NO circumstances are secrets written to plain text files:
 ### 3. Account Mismatch & Accidental Leaks
 * **Threat**: Developer accidentally pushes confidential Work code to a Personal repository or vice versa.
 * **Mitigation**: The **Push Guard** service intercepts git push actions and displays a modal confirmation dialog when active identity does not match repository mapping.
+
+### 4. Reauthentication Account Substitution
+* **Threat**: A user attempts to repair one profile but signs into another GitHub account in the browser.
+* **Mitigation**: Reauthentication compares the verified GitHub username with the selected profile before replacing SecretStorage. A mismatch or cancellation preserves the existing token, profile ID, and mappings. Tokens are treated as opaque printable values but whitespace/control characters and values over 1024 characters are rejected at every shared boundary.

@@ -4,7 +4,7 @@ Electron + TypeScript + native HTML/CSS, MIT licensed. The desktop is another vi
 
 ## Run
 
-1. Install `github-account-manager-1.3.0.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
+1. Install `github-account-manager-1.4.0.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
 2. Keep your local VS Code window open. The extension starts its connection automatically; you can also open **GitHub: Open Control Panel Dashboard**.
 3. From this repository run `npm start --prefix desktop`. Select the VS Code window if more than one is available.
 
@@ -14,6 +14,7 @@ For a fresh checkout, install Node.js 22.12+ and Git, then run `npm install` and
 
 - Existing accounts and folder/owner mapping rules load directly from the selected extension window. Changes refresh every five seconds while visible and when returning to the desktop.
 - **Sign in with browser** calls the extension’s existing OAuth flow. Complete GitHub login and the friendly-name prompt through VS Code. Username/email are detected and the token stays in VS Code SecretStorage. Signing in to an existing username updates that profile rather than duplicating it.
+- **Reauthenticate** on an existing browser account replaces an invalid/expired OAuth token without changing its profile ID or mappings. Signing into a different username is rejected and preserves the previous credential.
 - Add accounts with a token or manual settings, update tokens, remove profiles, map projects, switch the selected workspace account and apply its mapping.
 - Run the same diagnostics, health check and dashboard commands. Prompts, confirmations and reports appear in VS Code. These retain the extension’s current capabilities and platform limitations.
 

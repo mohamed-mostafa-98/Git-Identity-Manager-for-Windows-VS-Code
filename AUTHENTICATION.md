@@ -2,15 +2,20 @@
 
 ## Overview
 
-The tool supports three distinct authentication strategies for GitHub account profiles:
+The tool supports four authentication strategies for GitHub account profiles:
 
-1. **HTTPS (Git Credential Manager - GCM)**
-2. **SSH (OpenSSH Host Aliasing)**
-3. **GitHub CLI (`gh`)**
+1. **Browser OAuth**, stored through VS Code SecretStorage and applied to HTTPS Git through GCM
+2. **HTTPS personal access token (Git Credential Manager - GCM)**
+3. **SSH (OpenSSH Host Aliasing)**
+4. **GitHub CLI (`gh`)**
+
+### Reauthenticating browser accounts
+
+Use the dashboard's **Reauthenticate** button or **GitHub: Reauthenticate Browser Account**. A fresh browser session must return the same GitHub username as the selected profile. On success, only the secure token and verified email are refreshed; the profile ID and repository mappings remain unchanged. Cancellation or a different GitHub username does not overwrite the existing credential.
 
 ---
 
-## Strategy 1: HTTPS via Git Credential Manager (GCM)
+## HTTPS via Git Credential Manager (GCM)
 
 GCM is Microsoft's official cross-platform Git credential helper on Windows.
 
@@ -32,7 +37,7 @@ Result: Both Personal and Work HTTPS credentials co-exist in Windows Credential 
 
 ---
 
-## Strategy 2: SSH via OpenSSH Host Aliasing
+## SSH via OpenSSH Host Aliasing
 
 For developers who authenticate using SSH key pairs (`git@github.com:...`).
 
@@ -60,7 +65,7 @@ OpenSSH routes traffic to `github.com` using the `id_ed25519_work` key automatic
 
 ---
 
-## Strategy 3: GitHub CLI (`gh`)
+## GitHub CLI (`gh`)
 
 If installed, the extension integrates with `gh auth status` and `gh auth switch`.
 When switching profiles, it runs:

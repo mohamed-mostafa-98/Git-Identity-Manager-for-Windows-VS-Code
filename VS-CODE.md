@@ -12,6 +12,8 @@
 3. **Command Palette Integration**:
    - `GitHub: Switch Account Profile`
    - `GitHub: Add Account Profile`
+   - `GitHub: Reauthenticate Browser Account`
+   - `GitHub: Save or Update Account Token`
    - `GitHub: Remove Account Profile`
    - `GitHub: Map Project to Account`
    - `GitHub: Repository Account Status`

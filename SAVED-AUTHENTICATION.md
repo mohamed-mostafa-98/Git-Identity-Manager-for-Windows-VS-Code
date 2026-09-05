@@ -1,4 +1,4 @@
-# Saved authentication (version 1.3.0)
+# Saved authentication (version 1.4.0)
 
 Add each GitHub account once, then assign each repository to the account it should use.
 
@@ -9,6 +9,8 @@ Add each GitHub account once, then assign each repository to the account it shou
 5. Fetch, pull and push normally. With a valid saved token and repository permission, Git can reuse Windows Credential Manager without another browser login.
 
 Existing profiles: use **GitHub: Save or Update Account Token**, or the dashboard's **Save / Update Token** button. Other mapped repositories receive the replacement when next opened or synchronized. Switching explicitly works even when automatic switching is disabled. A more specific folder assignment wins over a parent folder rule.
+
+Browser profiles use **Reauthenticate** instead. The extension opens a fresh GitHub login and accepts it only when its username matches the selected profile. Success replaces the secure token while preserving the profile ID and mappings. Cancellation or signing into another account leaves the previous token unchanged.
 
 ## Token access
 

@@ -61,6 +61,7 @@ Open **GitHub: Open Control Panel Dashboard** for profiles, mappings, workspace 
 | Command | Purpose |
 |---|---|
 | `GitHub: Add Account Profile` | Add an account through browser login, PAT, or manual setup |
+| `GitHub: Reauthenticate Browser Account` | Replace an invalid browser token for the selected profile while preserving its mappings |
 | `GitHub: Save or Update Account Token` | Replace a profile's saved PAT safely |
 | `GitHub: Switch Account Profile` | Apply an account to the current repository |
 | `GitHub: Map Project to Account` | Save a folder or remote-owner assignment |
@@ -87,13 +88,15 @@ Paths can differ for VS Code Insiders, portable mode, profiles, and other operat
 
 ### Manually update or revoke a token
 
-The supported manual update is:
+The supported manual PAT update is:
 
 1. Create or update the token in GitHub settings.
 2. In VS Code, run **GitHub: Save or Update Account Token**.
 3. Select the profile and paste the replacement into the masked prompt.
 4. Open each mapped repository when needed and run **Switch Account Profile** or **Apply & Sync Identity**. This refreshes its Git Credential Manager entry.
 5. Run **Health** to confirm the token belongs to the expected account and reaches the repository push endpoint.
+
+For a browser-login profile, click **Reauthenticate** on its dashboard card. Sign into the same username shown on that profile. The extension preserves its profile ID and mappings; cancellation or a different username leaves the existing credential unchanged.
 
 To revoke access, revoke the token on GitHub, remove its extension profile if no longer needed, and remove the repository-specific Windows credential. Deleting a profile removes the SecretStorage copy and mappings but cannot revoke a token at GitHub and may not remove every previously written GCM entry.
 
