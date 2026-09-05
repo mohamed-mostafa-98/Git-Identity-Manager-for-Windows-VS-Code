@@ -3,6 +3,7 @@ import { ProfileManager } from '../services/ProfileManager';
 import { AccountProfile, AuthenticationMethod } from '../models/AccountProfile';
 import { BrowserAuthStrategy } from '../services/BrowserAuthStrategy';
 import { Logger } from '../utils/logger';
+import { isValidToken } from '../utils/token';
 
 export class QuickPickMenu {
     private browserAuth: BrowserAuthStrategy;
@@ -124,7 +125,7 @@ export class QuickPickMenu {
         const token = await vscode.window.showInputBox({
             title: 'GitHub Personal Access Token', password: true, ignoreFocusOut: true,
             prompt: 'Paste a token belonging to this account with access to your repositories. Stored in secure credential storage.',
-            validateInput: value => /^[A-Za-z0-9_]+$/.test(value.trim()) ? null : 'Enter a token without spaces or line breaks.'
+            validateInput: value => isValidToken(value.trim()) ? null : 'Enter a token without spaces or line breaks.'
         });
         return token?.trim() || undefined;
     }
@@ -185,6 +186,23 @@ export class QuickPickMenu {
 
         vscode.window.showInformationMessage(`✓ Authenticated via Browser! Profile '${newProfile.displayName}' (@${newProfile.githubUsername}) created.`);
         return newProfile;
+    }
+
+    /** Replaces OAuth for one existing profile without changing its ID or mappings. */
+    public async reauthenticate(profileId: string): Promise<AccountProfile | undefined> {
+        const profile = this.profileManager.getProfileById(profileId);
+        if (!profile || profile.authenticationMethod !== AuthenticationMethod.BROWSER_OAUTH) {
+            throw new Error('Choose an existing browser-login account.');
+        }
+        const user = await this.browserAuth.loginViaBrowser();
+        if (!user) return undefined;
+        if (user.username.toLowerCase() !== profile.githubUsername.toLowerCase()) {
+            throw new Error(`Signed in as @${user.username}. Reauthenticate this profile as @${profile.githubUsername}, or add the other account separately.`);
+        }
+        const updated = { ...profile, githubEmail: user.email || profile.githubEmail, updatedAt: new Date().toISOString() };
+        await this.profileManager.saveProfile(updated, user.accessToken);
+        vscode.window.showInformationMessage(`Reauthenticated '${profile.displayName}' as @${profile.githubUsername}. Project mappings were preserved.`);
+        return updated;
     }
 
     /**

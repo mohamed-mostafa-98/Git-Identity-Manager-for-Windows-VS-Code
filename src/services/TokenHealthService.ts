@@ -1,6 +1,7 @@
 import * as https from 'https';
 import { AccountProfile } from '../models/AccountProfile';
 import { RepositoryDetails } from './RepositoryDetector';
+import { isValidToken } from '../utils/token';
 
 type Response = { status: number; body: string; type: string; limited: boolean; sso: boolean };
 
@@ -33,7 +34,7 @@ export class TokenHealthService {
 
     async check(profile: AccountProfile, token: string | undefined, repository?: RepositoryDetails): Promise<string[]> {
         if (!token) return ['No saved token for this profile. Add a token or sign in with your browser, then retry.'];
-        if (!/^[A-Za-z0-9_]+$/.test(token)) return ['The saved token has an invalid format. Replace it.'];
+        if (!isValidToken(token)) return ['The saved token has an invalid format. Replace it.'];
         const failure = (response: Response): string => {
             if (response.limited || response.status === 429) return 'GitHub rate limit reached. Wait and retry; permissions are not determined.';
             if (response.sso) return 'GitHub requires organization SSO authorization for this token.';

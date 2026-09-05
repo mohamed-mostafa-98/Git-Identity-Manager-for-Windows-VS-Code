@@ -32,7 +32,8 @@ function render() {
             const actions = node('div', '', 'card-bottom');
             actions.append(button('Use for workspace', 'switchProfile', profile.id), button('Remove', 'removeProfile', profile.id));
             card.append(actions);
-            if (['HTTPS', 'BROWSER_OAUTH'].includes(profile.authenticationMethod)) card.append(button('Update token…', 'saveToken', profile.id));
+            if (profile.authenticationMethod === 'HTTPS') card.append(button('Update token…', 'saveToken', profile.id));
+            if (profile.authenticationMethod === 'BROWSER_OAUTH') card.append(button('Reauthenticate…', 'reauthenticate', profile.id));
             $('#account-list').append(card);
         }
         if (!state.profiles.length) $('#account-list').append(node('p', 'No profiles yet. Sign in with your browser to add one.', 'empty'));

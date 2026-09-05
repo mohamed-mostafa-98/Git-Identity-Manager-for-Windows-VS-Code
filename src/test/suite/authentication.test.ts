@@ -28,10 +28,10 @@ suite('Saved authentication and repository assignment', () => {
         if (process.platform !== 'win32') this.skip();
         const calls: Parameters<typeof CommandExecutor.execute>[] = [];
         CommandExecutor.execute = async (...args) => { calls.push(args); return { exitCode: 0, stdout: '', stderr: '' }; };
-        await new HTTPSAuthStrategy().configureHTTPSAuth(rootPath, work, repo.remoteUrl, 'test_token');
+        await new HTTPSAuthStrategy().configureHTTPSAuth(rootPath, work, repo.remoteUrl, 'test-token.with~chars');
         const store = calls.find(c => c[1].includes('store'))!;
         assert.ok(store);
-        assert.strictEqual(store[3], 'protocol=https\nhost=github.com\npath=company/app.git\nusername=work\npassword=test_token\n\n');
+        assert.strictEqual(store[3], 'protocol=https\nhost=github.com\npath=company/app.git\nusername=work\npassword=test-token.with~chars\n\n');
         assert.strictEqual(store[2]?.env?.GCM_CREDENTIAL_STORE, 'wincredman');
         assert.ok(calls.some(c => c[1].includes('credential.credentialStore') && c[1].includes('wincredman')));
         assert.ok(calls.every(c => !JSON.stringify(c.slice(0, 3)).includes('test_token')));
@@ -146,6 +146,16 @@ suite('Saved authentication and repository assignment', () => {
             assert.strictEqual(state.get('github_account_profiles_v1')[2].githubUsername, 'new-user');
             assert.strictEqual([...savedSecrets.values()][0], 'browser_token');
             assert.ok(!JSON.stringify(loggedIn).includes('browser_token'));
+            const oauthId = state.get('github_account_profiles_v1')[2].id;
+            BrowserAuthStrategy.prototype.loginViaBrowser = async () => ({ username: 'new-user', email: 'updated@example.com', displayName: 'New', accessToken: 'replacement-token' });
+            const reauthenticated = await bridgeHandler!({ action: 'reauthenticate', id: oauthId });
+            assert.strictEqual(reauthenticated.profiles.length, 3);
+            assert.strictEqual(reauthenticated.profiles[2].id, oauthId);
+            assert.strictEqual(reauthenticated.profiles[2].githubEmail, 'updated@example.com');
+            assert.strictEqual(savedSecrets.get(`github_token_${oauthId}`), 'replacement-token');
+            BrowserAuthStrategy.prototype.loginViaBrowser = async () => ({ username: 'wrong-user', email: '', displayName: '', accessToken: 'wrong-token' });
+            await assert.rejects(() => bridgeHandler!({ action: 'reauthenticate', id: oauthId }), /Signed in as @wrong-user/);
+            assert.strictEqual(savedSecrets.get(`github_token_${oauthId}`), 'replacement-token');
             fake.workspace.isTrusted = false;
             await assert.rejects(() => bridgeHandler!({ action: 'browserLogin' }), /Trust/);
         } finally {

@@ -2,6 +2,16 @@
 
 The source repository contains installable VSIX artifacts for local testing. Install a file through **Extensions → … → Install from VSIX…**, then reload VS Code. Published marketplace/GitHub releases are a future delivery step unless a release page explicitly says otherwise.
 
+## 1.4.0 — Browser account reauthentication
+
+- Adds **Reauthenticate** to browser-login profiles in the dashboard and desktop companion.
+- Forces a new GitHub browser session and requires the result to match the profile's saved username.
+- Replaces the secure token while preserving the profile ID, project mappings, and display name.
+- Keeps the previous credential when login is cancelled or the wrong account is selected.
+- Accepts safe printable opaque token characters while continuing to reject whitespace, control injection, and unreasonable lengths.
+
+Artifact: `github-account-manager-1.4.0.vsix`
+
 ## 1.3.0 — Repository-aware token health
 
 - Validates the saved token against the expected GitHub account.

@@ -48,6 +48,9 @@ export class DashboardWebview {
                         case 'saveToken':
                             await vscode.commands.executeCommand('githubAccountManager.saveToken', message.profileId);
                             break;
+                        case 'reauthenticate':
+                            await vscode.commands.executeCommand('githubAccountManager.reauthenticate', message.profileId);
+                            break;
 
                         case 'addProfile':
                             const newProfile: AccountProfile = {
@@ -585,7 +588,8 @@ export class DashboardWebview {
                     </div>
                     <div class="card-actions">
                         <button class="btn" onclick="sendMessage('switchProfile', {profileId: '${p.id}'})">Use for This Project</button>
-                        ${p.authenticationMethod === AuthenticationMethod.HTTPS || p.authenticationMethod === AuthenticationMethod.BROWSER_OAUTH ? `<button class="btn btn-secondary" onclick="sendMessage('saveToken', {profileId: '${p.id}'})">Save / Update Token</button>` : ''}
+                        ${p.authenticationMethod === AuthenticationMethod.HTTPS ? `<button class="btn btn-secondary" onclick="sendMessage('saveToken', {profileId: '${p.id}'})">Save / Update Token</button>` : ''}
+                        ${p.authenticationMethod === AuthenticationMethod.BROWSER_OAUTH ? `<button class="btn btn-secondary" onclick="sendMessage('reauthenticate', {profileId: '${p.id}'})">Reauthenticate</button>` : ''}
                         <button class="btn btn-secondary" onclick="sendMessage('validateAuth', {profileId: '${p.id}'})">Health</button>
                         <button class="btn btn-danger" onclick="sendMessage('removeProfile', {profileId: '${p.id}'})">Remove</button>
                     </div>

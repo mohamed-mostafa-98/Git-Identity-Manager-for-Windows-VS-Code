@@ -31,7 +31,7 @@ const os = __importStar(require("os"));
 const crypto_1 = require("crypto");
 const bridgeDirectory = () => path.join(os.homedir(), '.git-identity-manager', 'connections');
 exports.bridgeDirectory = bridgeDirectory;
-const actions = ['snapshot', 'browserLogin', 'addAccount', 'saveToken', 'switchProfile', 'removeProfile', 'mapProject', 'removeMapping', 'sync', 'diagnostics', 'health', 'dashboard'];
+const actions = ['snapshot', 'browserLogin', 'addAccount', 'saveToken', 'reauthenticate', 'switchProfile', 'removeProfile', 'mapProject', 'removeMapping', 'sync', 'diagnostics', 'health', 'dashboard'];
 function bridgeRequest(value) {
     const row = value;
     if (!row || typeof row !== 'object' || Array.isArray(row) ||
@@ -39,7 +39,7 @@ function bridgeRequest(value) {
         (row.id !== undefined && (typeof row.id !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(row.id)))) {
         throw new Error('Unsupported desktop action.');
     }
-    if (['saveToken', 'switchProfile', 'removeProfile', 'removeMapping'].includes(row.action) !== (row.id !== undefined)) {
+    if (['saveToken', 'reauthenticate', 'switchProfile', 'removeProfile', 'removeMapping'].includes(row.action) !== (row.id !== undefined)) {
         throw new Error('Invalid action target.');
     }
     return row;

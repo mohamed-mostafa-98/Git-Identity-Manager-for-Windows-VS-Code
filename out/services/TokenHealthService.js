@@ -25,6 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TokenHealthService = void 0;
 const https = __importStar(require("https"));
+const token_1 = require("../utils/token");
 class TokenHealthService {
     request(host, route, token) {
         return new Promise((resolve, reject) => {
@@ -56,7 +57,7 @@ class TokenHealthService {
     async check(profile, token, repository) {
         if (!token)
             return ['No saved token for this profile. Add a token or sign in with your browser, then retry.'];
-        if (!/^[A-Za-z0-9_]+$/.test(token))
+        if (!(0, token_1.isValidToken)(token))
             return ['The saved token has an invalid format. Replace it.'];
         const failure = (response) => {
             if (response.limited || response.status === 429)

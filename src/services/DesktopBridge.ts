@@ -5,7 +5,7 @@ import * as os from 'os';
 import { randomBytes, randomUUID } from 'crypto';
 
 export const bridgeDirectory = () => path.join(os.homedir(), '.git-identity-manager', 'connections');
-const actions = ['snapshot', 'browserLogin', 'addAccount', 'saveToken', 'switchProfile', 'removeProfile', 'mapProject', 'removeMapping', 'sync', 'diagnostics', 'health', 'dashboard'];
+const actions = ['snapshot', 'browserLogin', 'addAccount', 'saveToken', 'reauthenticate', 'switchProfile', 'removeProfile', 'mapProject', 'removeMapping', 'sync', 'diagnostics', 'health', 'dashboard'];
 export type BridgeRequest = { action: string; id?: string };
 type Connection = { version: 1; port: number; key: string; label: string };
 
@@ -16,7 +16,7 @@ export function bridgeRequest(value: unknown): BridgeRequest {
         (row.id !== undefined && (typeof row.id !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(row.id)))) {
         throw new Error('Unsupported desktop action.');
     }
-    if (['saveToken', 'switchProfile', 'removeProfile', 'removeMapping'].includes(row.action) !== (row.id !== undefined)) {
+    if (['saveToken', 'reauthenticate', 'switchProfile', 'removeProfile', 'removeMapping'].includes(row.action) !== (row.id !== undefined)) {
         throw new Error('Invalid action target.');
     }
     return row;

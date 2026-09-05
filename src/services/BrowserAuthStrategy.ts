@@ -1,5 +1,6 @@
 import * as https from 'https';
 import { Logger } from '../utils/logger';
+import { isValidToken } from '../utils/token';
 
 export interface GitHubUserInfo {
     username: string;
@@ -54,7 +55,7 @@ export class BrowserAuthStrategy {
      * Queries GitHub API (https://api.github.com/user) for authenticated user profile details.
      */
     public async fetchGitHubUserProfile(token: string): Promise<{ username: string; email: string; displayName: string } | undefined> {
-        if (!/^[A-Za-z0-9_]+$/.test(token)) return undefined;
+        if (!isValidToken(token)) return undefined;
         return new Promise((resolve) => {
             const options: https.RequestOptions = {
                 hostname: 'api.github.com',

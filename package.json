@@ -2,7 +2,7 @@
   "name": "github-account-manager",
   "displayName": "GitHub Account & Git Identity Manager",
   "description": "Production-grade Windows & VS Code tool for seamlessly switching and managing multiple GitHub accounts and Git identities.",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "publisher": "mohammed-dev",
   "license": "MIT",
   "repository": {
@@ -44,6 +44,12 @@
         "title": "GitHub: Save or Update Account Token",
         "category": "GitHub Manager",
         "icon": "$(key)"
+      },
+      {
+        "command": "githubAccountManager.reauthenticate",
+        "title": "GitHub: Reauthenticate Browser Account",
+        "category": "GitHub Manager",
+        "icon": "$(refresh)"
       },
       {
         "command": "githubAccountManager.openDashboard",

@@ -192,6 +192,20 @@ async function activate(context) {
         catch (error) {
             showFailure(error);
         }
+    }), vscode.commands.registerCommand('githubAccountManager.reauthenticate', async (profileId) => {
+        try {
+            if (!profileId)
+                throw new Error('Open the dashboard and choose the browser account to reauthenticate.');
+            const saved = await quickPickMenu.reauthenticate(profileId);
+            const folder = vscode.workspace.workspaceFolders?.[0];
+            const repository = saved && folder ? await repoDetector.detectRepository(folder.uri.fsPath) : undefined;
+            if (repository && repoMapper.resolveProfileForRepository(repository)?.id === saved?.id)
+                await syncWorkspaceProfile();
+            refreshUI();
+        }
+        catch (error) {
+            showFailure(error);
+        }
     }), vscode.commands.registerCommand('githubAccountManager.removeAccount', async (item) => {
         const targetId = item?.profile?.id || profileManager.getActiveProfileId();
         if (!targetId)
@@ -340,6 +354,9 @@ async function activate(context) {
                                 break;
                             case 'saveToken':
                                 await quickPickMenu.saveToken(request.id);
+                                break;
+                            case 'reauthenticate':
+                                await quickPickMenu.reauthenticate(request.id);
                                 break;
                             case 'switchProfile':
                                 await syncWorkspaceProfile(request.id);

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HTTPSAuthStrategy = void 0;
 const commandExecutor_1 = require("../utils/commandExecutor");
+const token_1 = require("../utils/token");
 class HTTPSAuthStrategy {
     async configureHTTPSAuth(repoPath, profile, remoteUrl, token) {
         if (process.platform !== 'win32')
@@ -12,7 +13,7 @@ class HTTPSAuthStrategy {
             !/^\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/?$/.test(url.pathname)) {
             throw new Error('Use a clean https://github.com/owner/repository.git remote for saved authentication.');
         }
-        if (!/^[A-Za-z0-9-]+$/.test(profile.githubUsername) || (token !== undefined && !/^[A-Za-z0-9_]+$/.test(token))) {
+        if (!/^[A-Za-z0-9-]+$/.test(profile.githubUsername) || (token !== undefined && !(0, token_1.isValidToken)(token))) {
             throw new Error('Invalid GitHub username or token.');
         }
         const options = { cwd: repoPath, timeout: 30000 };

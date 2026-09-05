@@ -1,5 +1,6 @@
 import { CommandExecutor } from '../utils/commandExecutor';
 import { AccountProfile } from '../models/AccountProfile';
+import { isValidToken } from '../utils/token';
 
 export class HTTPSAuthStrategy {
     public async configureHTTPSAuth(repoPath: string, profile: AccountProfile, remoteUrl: string, token?: string): Promise<boolean> {
@@ -10,7 +11,7 @@ export class HTTPSAuthStrategy {
             !/^\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/?$/.test(url.pathname)) {
             throw new Error('Use a clean https://github.com/owner/repository.git remote for saved authentication.');
         }
-        if (!/^[A-Za-z0-9-]+$/.test(profile.githubUsername) || (token !== undefined && !/^[A-Za-z0-9_]+$/.test(token))) {
+        if (!/^[A-Za-z0-9-]+$/.test(profile.githubUsername) || (token !== undefined && !isValidToken(token))) {
             throw new Error('Invalid GitHub username or token.');
         }
         const options = { cwd: repoPath, timeout: 30000 };

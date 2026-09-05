@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BrowserAuthStrategy = void 0;
 const https = __importStar(require("https"));
 const logger_1 = require("../utils/logger");
+const token_1 = require("../utils/token");
 class BrowserAuthStrategy {
     /**
      * Triggers GitHub OAuth login via browser.
@@ -63,7 +64,7 @@ class BrowserAuthStrategy {
      * Queries GitHub API (https://api.github.com/user) for authenticated user profile details.
      */
     async fetchGitHubUserProfile(token) {
-        if (!/^[A-Za-z0-9_]+$/.test(token))
+        if (!(0, token_1.isValidToken)(token))
             return undefined;
         return new Promise((resolve) => {
             const options = {
