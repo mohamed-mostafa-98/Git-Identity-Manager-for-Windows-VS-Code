@@ -1,4 +1,4 @@
-# Saved authentication (version 1.1.0)
+# Saved authentication (version 1.3.0)
 
 Add each GitHub account once, then assign each repository to the account it should use.
 
@@ -14,7 +14,7 @@ Existing profiles: use **GitHub: Save or Update Account Token**, or the dashboar
 
 Choose only the repositories and permissions you need. For a fine-grained token, Git reads require repository Contents read access and pushes require Contents write access. Updating workflow files can require Workflows permission. Organization approval or SSO authorization may also be required. See [GitHub's token documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) for your account's options.
 
-Verification checks which account owns the token; it does not prove access to every repository. Expired/revoked tokens and missing permissions still require attention. Renew the token with the update command rather than repeatedly clearing credentials.
+Use the account **Health** button with a repository open to check token ownership, repository visibility, SSO/rate-limit responses, and whether GitHub accepts the token at the Git push-service endpoint. The check does not push. Branch rules, workflow-file permissions, and a different credential cached by terminal Git can still reject a particular push. Renew the token with the update command rather than repeatedly clearing all credentials.
 
 ## Storage and scope
 

@@ -1,215 +1,158 @@
-# 🐙 GitHub Account & Git Identity Manager for Windows & VS Code
+# GitHub Account & Git Identity Manager
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![VS Code Extension](https://img.shields.io/badge/VS%20Code-v1.75%2B-blue)](https://code.visualstudio.com/)
-[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)](https://microsoft.com)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![VS Code](https://img.shields.io/badge/VS%20Code-1.75%2B-007ACC)](https://code.visualstudio.com/)
+[![Current release](https://img.shields.io/badge/release-1.3.0-2563eb)](RELEASES.md)
 
-A production-grade developer tool for **Windows** and **VS Code** that solves the friction of managing multiple GitHub accounts (Personal, Work, Client) and Git commit identities on a single machine.
+Manage personal, work, and client GitHub accounts without deleting credentials or signing in again whenever you change projects.
 
-> 🚫 **Say Goodbye to Manual Credential Wiping (`cmdkey /delete:LegacyGeneric:target=git:https://github.com`) and Repeated Logins!**
+The VS Code extension is the source of truth for accounts, project mappings, Git identity, and secure tokens. The optional Electron desktop app provides a simpler view of that same running extension.
 
----
+## What it does
 
-## Saved login and per-project accounts (1.1.0)
+- Saves multiple GitHub profiles with browser OAuth, personal access tokens, SSH, or GitHub CLI.
+- Maps a folder or GitHub owner/repository pattern to a specific account.
+- Applies repository-local `user.name` and `user.email`.
+- Stores HTTPS credentials per repository through Git Credential Manager using `credential.useHttpPath=true`.
+- Switches the current project to its assigned account without clearing other accounts.
+- Checks saved-token identity, repository visibility, SSO/rate-limit errors, and GitHub push-endpoint access without pushing.
+- Warns when the active account and project mapping disagree.
+- Shows the same accounts and actions in the desktop companion while VS Code is open.
 
-Save a personal access token once, then click **Use for This Project** on an account in the dashboard. Browser OAuth tokens are now also connected to Git Credential Manager. See [Saved authentication setup](SAVED-AUTHENTICATION.md) for installation, token renewal and limitations.
+## Install
 
-## ✨ Features & Highlights
+### Install the current VSIX
 
-- 🎛️ **Interactive Control Panel Dashboard**: Complete visual UI dashboard for managing accounts, repository mappings, local git identities, and system health checks.
-- ⚡ **1-Click Profile Switching**: Switch active GitHub profile and commit identity instantly with one click from the Status Bar, Activity Bar, or Dashboard.
-- 🔒 **Isolated HTTPS Vault Entries**: Automatically sets `credential.useHttpPath = true` so credentials for `Personal` and `Work` accounts co-exist side-by-side in Windows Credential Vault.
-- 🌐 **Native SSH Host Aliasing**: Generates OpenSSH `~/.ssh/config` host aliases (`github.com-work`, `github.com-personal`) to isolate multiple SSH key pairs effortlessly.
-- 📂 **Automatic Profile & Identity Mapping**: Auto-detects workspace repository or folder path and activates matching GitHub account profile and Git commit identity (`user.name` & `user.email`).
-- 🛡️ **Wrong Account Push Guard**: Intercepts `git push` operations and displays a protective warning if you are about to push with an account that doesn't match the repository mapping.
-- 📊 **Sidebar UI & Action Icons**: Activity Bar views with title bar navigation buttons (`+ Add`, `Switch`, `Dashboard`) and inline hover action icons (`Activate`, `Health`, `Delete`).
+1. Download or clone this repository.
+2. In VS Code, open **Extensions**, select `…`, then **Install from VSIX…**.
+3. Choose `github-account-manager-1.3.0.vsix` and reload VS Code.
 
----
+Or use the terminal:
 
-## 📌 Problem Solved
-
-When working with multiple GitHub accounts on Windows:
-- **Default Issue**: Git Credential Manager (GCM) caches credentials globally under `git:https://github.com`. When pushing to a work project, Git submits your personal token, resulting in `HTTP 403 Forbidden` or `repository not found` errors.
-- **Workaround Pain**: Developers end up running `cmdkey /delete:LegacyGeneric:target=git:https://github.com` and logging in again via OAuth browser prompts every time they change projects.
-- **Commit Identity Disconnect**: Manual credential deletion doesn't update `git config user.name` or `user.email`, leading to personal commits on company repositories.
-
-### 💡 The Solution
-This tool acts as an **orchestration layer** between VS Code, Git, OpenSSH, and Windows Credential Manager:
-1. **Isolated HTTPS Vault Entries**: Sets `credential.useHttpPath = true` and `credential.username` for clean HTTPS co-existence in Windows Credential Vault.
-2. **Native SSH Host Aliasing**: Generates OpenSSH `~/.ssh/config` host aliases to isolate multiple SSH key pairs.
-3. **Automatic Profile Activation**: Detects workspace repository or folder path and activates the matching GitHub account profile when opening VS Code.
-4. **Git Identity Sync**: Keeps repository-local `user.name` and `user.email` synchronized with the active profile.
-5. **Wrong Account Push Guard**: Displays protective warning before pushing with an mismatched active profile.
-
----
-
-## 🖥️ Webview Control Panel Dashboard
-
-Launch the Control Panel by running `GitHub: Open Control Panel Dashboard` or clicking the `$(dashboard)` icon in the activity bar:
-
-- **👤 Account Profiles**: View profile cards with active badges, auth method, email, last used date, 1-click activation, health validation, and an inline profile creation form.
-- **🗺️ Repository Mappings**: Manage folder path and remote URL mapping rules with 1-click deletion and addition forms.
-- **📂 Workspace Identity**: Live workspace repository status, protocol breakdown, current local `user.name` and `user.email`, with a 1-click **Apply & Sync Identity** button.
-- **🩺 Diagnostics & Health**: Execute diagnostic audits and view system health reports directly in VS Code.
-
----
-
-## 🚀 How to Import & Install the Project
-
-### Option A: Install as a VSIX Extension (Recommended for Daily Use)
-
-1. **Clone/Download the repository**:
-   ```cmd
-   git clone https://github.com/mohamed-mostafa-98/Git-Identity-Manager-for-Windows-VS-Code.git
-   cd githupe_acount_swicher
-   ```
-
-2. **Install Dependencies & Build VSIX Package**:
-   ```cmd
-   npm install
-   npx @vscode/vsce package
-   ```
-   *This creates a `.vsix` installer package file: `github-account-manager-1.1.0.vsix`.*
-
-3. **Install into VS Code**:
-   - **Via Command Line**:
-     ```cmd
-     code --install-extension github-account-manager-1.1.0.vsix
-     ```
-   - **Via VS Code UI**:
-     - Open VS Code.
-     - Go to the **Extensions** view (`Ctrl+Shift+X`).
-     - Click the `...` (More Actions) menu at the top right of the Extensions panel.
-     - Select **Install from VSIX...** and choose `github-account-manager-1.1.0.vsix`.
-
----
-
-### Option B: Import & Run in Development / Debug Mode
-
-If you want to run or modify the source code locally:
-
-1. **Open the project folder in VS Code**:
-   ```cmd
-   code "e:\SIDE PROJECT\githupe_acount_swicher"
-   ```
-
-2. **Install Dependencies & Compile**:
-   ```cmd
-   npm install
-   npm run compile
-   ```
-
-3. **Launch Extension Host**:
-   - Press `F5` (or click **Run -> Start Debugging**).
-   - A new **Extension Development Host** VS Code window will open with the extension loaded and active!
-
----
-
-## 🛠️ How to Use (Step-by-Step Guide)
-
-### Step 1: Add Your Account Profiles
-
-1. Open the Command Palette (`Ctrl+Shift+P`).
-2. Select `GitHub: Open Control Panel Dashboard` or `GitHub: Add Account Profile`.
-3. Choose your preferred setup option:
-   - 🌐 **Login via Browser (OAuth)** *(Recommended)*: Opens GitHub in your web browser, authenticates your account, and automatically extracts your GitHub username and email!
-   - ⚙️ **Manual Profile Setup**: Enter your username, email, and choose `HTTPS`, `SSH`, or `GitHub CLI` strategies manually.
-
-*Repeat this step for your Personal, Work, or Client accounts.*
-
----
-
-### Step 2: Map Projects to Account Profiles
-
-Tell the extension which projects belong to which GitHub accounts:
-
-1. Open Command Palette (`Ctrl+Shift+P`).
-2. Run `GitHub: Map Project to Account` or use the Dashboard.
-3. Select an account profile (e.g., `Work`).
-4. Choose a mapping rule:
-   - **Current Workspace Folder**: Binds the active project folder (e.g., `C:\Projects\CompanySystem`) to `Work`.
-   - **Remote Organization Pattern**: Binds any repository matching a remote pattern (e.g., `company` or `github.com/company/*`) to `Work`.
-
----
-
-### Step 3: Work Normally!
-
-When you open any project in VS Code:
-- The Status Bar shows: `$(github) GitHub: Work 🟢`
-- **Git Commit Identity** is automatically set (`user.name` & `user.email`).
-- **HTTPS Credentials** or **SSH Host Aliases** are configured automatically.
-- Run `git push` or `git pull` without credential conflicts or prompts!
-
----
-
-## ⚡ Commands Reference
-
-Access these commands anytime from the Command Palette (`Ctrl+Shift+P`):
-
-| Command | Description |
-| :--- | :--- |
-| `GitHub: Open Control Panel Dashboard` | Launch interactive webview Control Panel Dashboard |
-| `GitHub: Switch Account Profile` | Manually switch active GitHub account profile |
-| `GitHub: Add Account Profile` | Launch wizard to add a new account profile |
-| `GitHub: Remove Account Profile` | Delete an existing account profile |
-| `GitHub: Current Active Account` | Display active account profile status |
-| `GitHub: Map Project to Account` | Map workspace folder or remote pattern to a profile |
-| `GitHub: Remove Repository Mapping` | Delete an existing repository mapping rule |
-| `GitHub: Repository Account Status` | View detailed account & identity status for active repo |
-| `GitHub: Run Diagnostics` | Open non-sensitive system health diagnostic report |
-| `GitHub: Validate Authentication Health` | Test authentication readiness for active profile |
-
----
-
-## ⚙️ Extension Settings
-
-Customize extension behavior in VS Code Settings (`Ctrl+,` -> search for `GitHub Account Manager`):
-
-```json
-{
-  // Protection mode for accidental pushes: "Warn", "Strict", or "Disabled"
-  "githubAccountManager.pushGuardMode": "Warn",
-
-  // Automatically activate profile when opening workspace
-  "githubAccountManager.autoSwitchOnWorkspaceOpen": true,
-
-  // Enable credential.useHttpPath=true for HTTPS vault isolation
-  "githubAccountManager.enableGcmHttpPath": true
-}
+```powershell
+code --install-extension github-account-manager-1.3.0.vsix
 ```
 
----
+### Build from source
 
-## 🛡️ Security & Secret Safety
+```powershell
+npm install
+npm run compile
+npx @vscode/vsce package
+```
 
-- **No Plain-Text Secrets**: Tokens and credentials are **NEVER** saved to JSON files, settings, or logs.
-- **OS Vault Storage**: HTTPS tokens are stored in **Windows Credential Manager** (via GCM) or **VS Code SecretStorage API** (Windows DPAPI).
-- **Sanitized Logging**: All output logs redact sensitive token patterns (`ghp_*`) and private key blocks automatically.
+Run `npm run test:unit` for the extension test suite.
 
----
+## Quick start
 
-## 📚 Technical Documentation Index
+1. Open a local GitHub repository in VS Code.
+2. Run **GitHub: Add Account Profile** from the Command Palette.
+3. Choose **Login via Browser** or **Personal Access Token**. Repeat for each account.
+4. Run **GitHub: Map Project to Account** and assign the current folder or an owner pattern.
+5. Run **GitHub: Switch Account Profile**, or click **Use for This Project** in the dashboard.
+6. Use **Health** before pushing when you want to verify the saved token and current repository.
 
-For deep architectural and implementation details, explore the full documentation suite:
+For fine-grained tokens, select the required repositories and grant **Contents: Read and write** for pushes. Changes under `.github/workflows/` can also require **Workflows: Read and write**. Organization SSO or token approval may still be required.
 
-- 🏗️ [Architecture Overview](ARCHITECTURE.md) — Technical architecture, control flow, design decisions
-- 🔒 [Security Threat Model](SECURITY.md) — Credential storage policies & untrusted repo safety
-- 🔑 [Authentication Guide](AUTHENTICATION.md) — HTTPS, SSH, and gh CLI auth strategies
-- ✍️ [Git Commit Identity Sync](GIT-INTEGRATION.md) — Local git config vs global git config
-- 🌐 [SSH Host Aliasing](SSH.md) — OpenSSH `~/.ssh/config` multi-key setup
-- 🔐 [HTTPS & Git Credential Manager](HTTPS.md) — GCM `credential.useHttpPath` vault isolation
-- 💻 [VS Code Integration](VS-CODE.md) — Status Bar, Tree Views, commands reference
-- 🖥️ [CLI Roadmap](CLI.md) — Companion CLI specification (`github-manager`)
-- 🧪 [Testing & Verification](TESTING.md) — Automated Mocha test suite execution
-- 🩺 [Troubleshooting & FAQ](TROUBLESHOOTING.md) — Solutions to common 403 & SSH issues
-- 🗺️ [Product Roadmap](ROADMAP.md) — MVP, Phase 2, and multi-provider goals
+## Dashboard and commands
 
----
+Open **GitHub: Open Control Panel Dashboard** for profiles, mappings, workspace identity, diagnostics, and account health.
 
-## 📄 License
+| Command | Purpose |
+|---|---|
+| `GitHub: Add Account Profile` | Add an account through browser login, PAT, or manual setup |
+| `GitHub: Save or Update Account Token` | Replace a profile's saved PAT safely |
+| `GitHub: Switch Account Profile` | Apply an account to the current repository |
+| `GitHub: Map Project to Account` | Save a folder or remote-owner assignment |
+| `GitHub: Validate Authentication Health` | Diagnose the current repository's saved token |
+| `GitHub: Repository Account Status` | Show mapping, active profile, and local identity |
+| `GitHub: Run Diagnostics` | Generate a non-sensitive environment report |
 
-MIT License. Developed for software engineers working across multiple GitHub accounts.
+The Health check performs read-only GitHub requests. A successful push-endpoint check does not override branch protection, organization policies, workflow-file permissions, or repository rules. An SSH repository pushes with its SSH key; a token health result does not validate that key.
+
+## Where data is stored
+
+Tokens do **not** live in this repository, `.git/config`, JSON settings, logs, remote URLs, or desktop responses.
+
+| Data | Location | Safe way to change it |
+|---|---|---|
+| Profile names, usernames, emails, mappings, active profile | VS Code `globalState`, inside VS Code's internal user-data database. On standard Windows installations this is usually under `%APPDATA%\Code\User\globalStorage\state.vscdb`. | Use the extension dashboard and commands. Do not edit `state.vscdb`. |
+| Extension token copy | VS Code `SecretStorage`, protected by the operating-system credential service. It has no supported editable file path. | Run **GitHub: Save or Update Account Token** or sign in through the browser again. |
+| Git HTTPS credential | **Windows Credential Manager → Windows Credentials → Generic Credentials**, separated by the GitHub repository path. Windows owns the encrypted storage; there is no supported token file path. | Update through the extension. To force recreation, remove only that repository's `git:https://github.com/...` entry, then switch/sync the profile again. |
+| Git identity and credential selection | `<repository>\.git\config`; contains name, email, helper, username, and path-isolation settings, never the token. | Switch or synchronize the account through the extension. |
+| Desktop connection descriptors | `%USERPROFILE%\.git-identity-manager\connections\`. These contain short-lived local connection capabilities, not GitHub tokens. | Managed automatically while VS Code is running. |
+| Legacy desktop M1 metadata | Electron user-data `workspace.json`, commonly `%APPDATA%\git-identity-desktop\workspace.json` on Windows. It contains metadata only and no longer drives the companion UI. | Usually leave it alone; the VS Code extension is authoritative. |
+
+Paths can differ for VS Code Insiders, portable mode, profiles, and other operating systems. The location shown above is informational, not a manual-editing API.
+
+### Manually update or revoke a token
+
+The supported manual update is:
+
+1. Create or update the token in GitHub settings.
+2. In VS Code, run **GitHub: Save or Update Account Token**.
+3. Select the profile and paste the replacement into the masked prompt.
+4. Open each mapped repository when needed and run **Switch Account Profile** or **Apply & Sync Identity**. This refreshes its Git Credential Manager entry.
+5. Run **Health** to confirm the token belongs to the expected account and reaches the repository push endpoint.
+
+To revoke access, revoke the token on GitHub, remove its extension profile if no longer needed, and remove the repository-specific Windows credential. Deleting a profile removes the SecretStorage copy and mappings but cannot revoke a token at GitHub and may not remove every previously written GCM entry.
+
+## Security model
+
+- Tokens enter through masked VS Code prompts or GitHub's browser OAuth flow.
+- Token ownership is checked before saving.
+- Secrets pass to Git Credential Manager through standard input, never command arguments.
+- HTTPS remotes must be clean `https://github.com/owner/repository.git` URLs without embedded credentials.
+- Repository-local username and `useHttpPath` settings isolate accounts by GitHub path.
+- Logs and desktop APIs do not return tokens.
+- The desktop renderer is sandboxed and can call only allowlisted operations through an authenticated loopback bridge.
+- Untrusted VS Code workspaces cannot trigger credential-changing desktop actions.
+
+Software running as the same operating-system user can still access resources that user is authorized to access. Protect the Windows session, use least-privilege tokens, enable token expiry, and revoke credentials after suspected compromise. See [SECURITY.md](SECURITY.md) for the detailed threat model.
 
 ## Desktop companion
 
-The Electron + TypeScript desktop is a second view of the same VS Code extension data and actions. Install extension v1.2.0, reload VS Code, then run `npm start --prefix desktop`. Existing profiles and mappings appear directly; browser login uses the extension and keeps tokens in its secure vault. VS Code must remain open. See [Desktop setup](desktop/README.md) and the [milestone plan](DESKTOP-PLAN.md). Authenticated AI-agent tools remain planned.
+The desktop app shows the extension's existing accounts and mappings; it does not create a second vault.
+
+```powershell
+npm install --prefix desktop
+npm start --prefix desktop
+```
+
+Keep the local VS Code window open and select it in the desktop app. Login prompts, confirmations, and reports appear in VS Code. Windows is verified locally; macOS and Linux remain release gates. See [desktop/README.md](desktop/README.md).
+
+## Releases
+
+| Version | Main changes |
+|---|---|
+| **1.3.0** | Repository-aware token Health check; identifies invalid/wrong-account tokens, missing repository access, SSO/rate limiting, and push-endpoint rejection without pushing |
+| **1.2.1** | Corrected the current GCM Windows vault backend name to `wincredman` |
+| **1.2.0** | Desktop companion bridge using the extension's existing profiles, mappings, secure storage, and browser-login commands |
+| **1.1.0** | Reusable PAT/browser credentials, GCM path isolation, exact per-project mappings, safer token verification, and push protection improvements |
+| **1.0.0** | Initial profile management, identity switching, HTTPS/SSH/GitHub CLI strategies, mappings, dashboard, and diagnostics |
+
+Detailed release notes and installation artifacts are in [RELEASES.md](RELEASES.md).
+
+## Future plan
+
+Work is tracked in the **GitHub Account & Git Identity Manager** project in the Mohamed Mostafa Linear workspace.
+
+1. **Secure authentication completion (MOH-82):** real two-account verification, expiry/renewal UX, cross-platform vault checks, and clearer repository write-access status.
+2. **Authenticated AI-agent connector (MOH-83):** project-scoped MCP/CLI tools that select the assigned account without returning tokens; read-only repository and pull-request tools first.
+3. **Workflow controls and releases (MOH-84):** view, run, retry, and cancel GitHub Actions per project, followed by Windows/macOS/Linux packaging and security/accessibility checks.
+
+The project will not claim cross-platform credential support until each platform's secure storage and two-account isolation have been tested.
+
+## Documentation
+
+- [Saved authentication](SAVED-AUTHENTICATION.md)
+- [Security model](SECURITY.md)
+- [Authentication strategies](AUTHENTICATION.md)
+- [HTTPS and Git Credential Manager](HTTPS.md)
+- [SSH account isolation](SSH.md)
+- [Architecture](ARCHITECTURE.md)
+- [Development and testing](DEVELOPMENT.md)
+- [Troubleshooting](TROUBLESHOOTING.md)
+- [Roadmap](ROADMAP.md)
+
+MIT licensed. See [LICENSE](LICENSE).
