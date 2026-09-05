@@ -152,6 +152,7 @@ The project will not claim cross-platform credential support until each platform
 
 ## Documentation
 
+- [Linear closure verification checklist](VERIFICATION-CHECKLIST.md)
 - [Saved authentication](SAVED-AUTHENTICATION.md)
 - [Security model](SECURITY.md)
 - [Authentication strategies](AUTHENTICATION.md)
