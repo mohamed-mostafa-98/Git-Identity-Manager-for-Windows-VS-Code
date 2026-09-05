@@ -111,6 +111,43 @@ class TokenHealthService {
             lines.push('This repository uses SSH; terminal pushes use its SSH key, not this token.');
         return lines;
     }
+    async repositoryMetadata(profile, token, repository) {
+        if (!token || !(0, token_1.isValidToken)(token))
+            throw new Error('This mapped account needs valid saved authentication.');
+        if (repository.hostname !== 'github.com')
+            throw new Error('Agent repository access supports GitHub.com only.');
+        const user = await this.request('api.github.com', '/user', token);
+        let login;
+        try {
+            login = JSON.parse(user.body).login;
+        }
+        catch { /* handled below */ }
+        if (user.status !== 200 || typeof login !== 'string' || login.toLowerCase() !== profile.githubUsername.toLowerCase()) {
+            throw new Error('The saved authentication does not match this project account.');
+        }
+        const response = await this.request('api.github.com', `/repos/${repository.owner}/${repository.repoName}`, token);
+        if (response.status !== 200)
+            throw new Error(`GitHub repository access failed with HTTP ${response.status}.`);
+        let value;
+        try {
+            value = JSON.parse(response.body);
+        }
+        catch {
+            throw new Error('GitHub returned invalid repository metadata.');
+        }
+        return {
+            repository: String(value.full_name || `${repository.owner}/${repository.repoName}`),
+            description: typeof value.description === 'string' ? value.description : null,
+            private: value.private === true,
+            defaultBranch: typeof value.default_branch === 'string' ? value.default_branch : null,
+            permissions: value.permissions && typeof value.permissions === 'object' ? {
+                pull: value.permissions.pull === true, triage: value.permissions.triage === true,
+                push: value.permissions.push === true, maintain: value.permissions.maintain === true,
+                admin: value.permissions.admin === true
+            } : undefined,
+            account: `@${login}`
+        };
+    }
 }
 exports.TokenHealthService = TokenHealthService;
 //# sourceMappingURL=TokenHealthService.js.map

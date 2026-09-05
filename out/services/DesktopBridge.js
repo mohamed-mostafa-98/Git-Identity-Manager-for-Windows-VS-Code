@@ -31,7 +31,7 @@ const os = __importStar(require("os"));
 const crypto_1 = require("crypto");
 const bridgeDirectory = () => path.join(os.homedir(), '.git-identity-manager', 'connections');
 exports.bridgeDirectory = bridgeDirectory;
-const actions = ['snapshot', 'browserLogin', 'addAccount', 'saveToken', 'reauthenticate', 'switchProfile', 'removeProfile', 'mapProject', 'removeMapping', 'sync', 'diagnostics', 'health', 'dashboard'];
+const actions = ['snapshot', 'agentRepository', 'browserLogin', 'addAccount', 'saveToken', 'reauthenticate', 'switchProfile', 'removeProfile', 'mapProject', 'removeMapping', 'sync', 'diagnostics', 'health', 'dashboard'];
 function bridgeRequest(value) {
     const row = value;
     if (!row || typeof row !== 'object' || Array.isArray(row) ||
@@ -78,7 +78,7 @@ async function startDesktopBridge(label, handle, directory = (0, exports.bridgeD
                 reply(400, { error: 'Unsupported desktop request.' });
                 return;
             }
-            const mutation = request.action !== 'snapshot';
+            const mutation = !['snapshot', 'agentRepository'].includes(request.action);
             if (mutation && busy) {
                 reply(409, { error: 'Finish the current action in VS Code first.' });
                 return;

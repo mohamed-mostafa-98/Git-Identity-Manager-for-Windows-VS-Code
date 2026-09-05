@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.75%2B-007ACC)](https://code.visualstudio.com/)
-[![Current release](https://img.shields.io/badge/release-1.5.0-2563eb)](RELEASES.md)
+[![Current release](https://img.shields.io/badge/release-1.6.0-2563eb)](RELEASES.md)
 
 Manage personal, work, and client GitHub accounts without deleting credentials or signing in again whenever you change projects.
 
@@ -25,12 +25,12 @@ The VS Code extension is the source of truth for accounts, project mappings, Git
 
 1. Download or clone this repository.
 2. In VS Code, open **Extensions**, select `…`, then **Install from VSIX…**.
-3. Choose `github-account-manager-1.5.0.vsix` and reload VS Code.
+3. Choose `github-account-manager-1.6.0.vsix` and reload VS Code.
 
 Or use the terminal:
 
 ```powershell
-code --install-extension github-account-manager-1.5.0.vsix
+code --install-extension github-account-manager-1.6.0.vsix
 ```
 
 ### Build from source
@@ -128,6 +128,7 @@ Keep the local VS Code window open and select it in the desktop app. Login promp
 
 | Version | Main changes |
 |---|---|
+| **1.6.0** | First authenticated agent CLI: mapped-account repository metadata and permissions without exposing tokens |
 | **1.5.0** | Reliable browser account selection, safe legacy username repair, duplicate-account protection, separate token actions, and responsive profile cards |
 | **1.4.0** | Reauthenticate an invalid browser-login profile in place; preserves mappings and accepts safe opaque OAuth/PAT token characters |
 | **1.3.0** | Repository-aware token Health check; identifies invalid/wrong-account tokens, missing repository access, SSO/rate limiting, and push-endpoint rejection without pushing |

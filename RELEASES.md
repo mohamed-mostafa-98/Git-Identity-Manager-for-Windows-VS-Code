@@ -2,6 +2,15 @@
 
 The source repository contains installable VSIX artifacts for local testing. Install a file through **Extensions → … → Install from VSIX…**, then reload VS Code. Published marketplace/GitHub releases are a future delivery step unless a release page explicitly says otherwise.
 
+## 1.6.0 — Authenticated agent repository metadata
+
+- Adds the first read-only MOH-83 agent CLI for the repository open in a trusted VS Code window.
+- Resolves the repository's assigned account and calls GitHub with its saved credential inside the extension.
+- Returns repository metadata, permissions, and verified username without returning the token.
+- Rejects missing mappings, invalid or mismatched credentials, and non-GitHub remotes.
+
+Artifact: `github-account-manager-1.6.0.vsix`
+
 ## 1.5.0 — Reliable multi-account reauthentication
 
 - Clears VS Code's remembered GitHub session choice and prompts for the account on browser login and reauthentication.

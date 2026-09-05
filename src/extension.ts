@@ -365,6 +365,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         try {
             const bridge = await startDesktopBridge(vscode.workspace.name || 'VS Code — no folder', async request => {
                 try {
+                if (request.action === 'agentRepository') {
+                    if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace before granting agent access.');
+                    const folder = vscode.workspace.workspaceFolders?.[0];
+                    const repository = folder && await repoDetector.detectRepository(folder.uri.fsPath);
+                    if (!repository) throw new Error('Open a Git repository with an origin remote.');
+                    const profile = repoMapper.resolveProfileForRepository(repository);
+                    if (!profile) throw new Error('Assign this repository to an account before granting agent access.');
+                    return new TokenHealthService().repositoryMetadata(profile, await secretService.getToken(profile.id), repository);
+                }
                 if (request.action !== 'snapshot') {
                     if (!vscode.workspace.isTrusted) throw new Error('Trust the VS Code workspace before changing accounts.');
                     switch (request.action) {

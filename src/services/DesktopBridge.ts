@@ -5,7 +5,7 @@ import * as os from 'os';
 import { randomBytes, randomUUID } from 'crypto';
 
 export const bridgeDirectory = () => path.join(os.homedir(), '.git-identity-manager', 'connections');
-const actions = ['snapshot', 'browserLogin', 'addAccount', 'saveToken', 'reauthenticate', 'switchProfile', 'removeProfile', 'mapProject', 'removeMapping', 'sync', 'diagnostics', 'health', 'dashboard'];
+const actions = ['snapshot', 'agentRepository', 'browserLogin', 'addAccount', 'saveToken', 'reauthenticate', 'switchProfile', 'removeProfile', 'mapProject', 'removeMapping', 'sync', 'diagnostics', 'health', 'dashboard'];
 export type BridgeRequest = { action: string; id?: string };
 type Connection = { version: 1; port: number; key: string; label: string };
 
@@ -47,7 +47,7 @@ export async function startDesktopBridge(label: string, handle: (request: Bridge
             let request: BridgeRequest;
             try { request = bridgeRequest(JSON.parse(body)); }
             catch { reply(400, { error: 'Unsupported desktop request.' }); return; }
-            const mutation = request.action !== 'snapshot';
+            const mutation = !['snapshot', 'agentRepository'].includes(request.action);
             if (mutation && busy) { reply(409, { error: 'Finish the current action in VS Code first.' }); return; }
             if (mutation) busy = true;
             try { reply(200, { value: await handle(request) }); }

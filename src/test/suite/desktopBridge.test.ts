@@ -25,6 +25,7 @@ suite('Desktop companion transport', () => {
             name = 'Edited in VS Code';
             assert.deepStrictEqual(await client.call(first.id, { action: 'snapshot' }), { name });
             assert.deepStrictEqual(await client.call(second.id, { action: 'snapshot' }), { name: 'Work' });
+            assert.deepStrictEqual(await client.call(second.id, { action: 'agentRepository' }), { name: 'Work' });
             for (const request of [{ action: 'executeCommand' }, { action: 'browserLogin', token: 'secret' }, { action: 'switchProfile' }, { action: 'snapshot', id: 'extra' }]) {
                 assert.throws(() => bridgeRequest(request));
             }

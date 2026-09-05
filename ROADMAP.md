@@ -24,8 +24,8 @@
 - [ ] Package the desktop companion after Windows/macOS/Linux checks.
 
 ## Milestone 3: Authenticated AI-agent connector (MOH-83)
-- [ ] Add project-scoped MCP and CLI tools that use the assigned account.
-- [ ] Start with status, repository metadata, and pull-request reads.
+- [ ] Add project-scoped MCP and CLI tools that use the assigned account. The authenticated repository-metadata CLI slice is delivered.
+- [ ] Continue from repository metadata to pull-request reads.
 - [ ] Never expose raw tokens to the model, logs, arguments, or tool output.
 - [ ] Add explicit authorization for write operations only after read isolation is proven.
 

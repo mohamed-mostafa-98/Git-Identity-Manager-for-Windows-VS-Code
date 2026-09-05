@@ -42,4 +42,14 @@ suite('Saved-token health check', () => {
         const checked = await run([response(200, '{"login":"work"}')], 'test_token', { ...repo, hostname: 'example.com' });
         assert.strictEqual(checked.calls.length, 1); assert.match(checked.report, /No token was sent to the remote host/);
     });
+    test('returns authenticated repository metadata without exposing its token', async () => {
+        const service = new TokenHealthService();
+        const responses = [response(200, '{"login":"work"}'), response(200, '{"full_name":"work/project","private":true,"default_branch":"main","permissions":{"pull":true,"push":false}}')];
+        (service as any).request = async () => responses.shift();
+        const metadata = await service.repositoryMetadata(profile, 'test_token', repo);
+        assert.deepStrictEqual(metadata, { repository: 'work/project', description: null, private: true, defaultBranch: 'main', permissions: { pull: true, triage: false, push: false, maintain: false, admin: false }, account: '@work' });
+        assert.ok(!JSON.stringify(metadata).includes('test_token'));
+        await assert.rejects(() => service.repositoryMetadata(profile, undefined, repo), /valid saved authentication/);
+        await assert.rejects(() => service.repositoryMetadata(profile, 'test_token', { ...repo, hostname: 'example.com' }), /GitHub.com only/);
+    });
 });

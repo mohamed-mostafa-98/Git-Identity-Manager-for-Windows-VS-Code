@@ -4,7 +4,7 @@ Electron + TypeScript + native HTML/CSS, MIT licensed. The desktop is another vi
 
 ## Run
 
-1. Install `github-account-manager-1.5.0.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
+1. Install `github-account-manager-1.6.0.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
 2. Keep your local VS Code window open. The extension starts its connection automatically; you can also open **GitHub: Open Control Panel Dashboard**.
 3. From this repository run `npm start --prefix desktop`. Select the VS Code window if more than one is available.
 
@@ -18,7 +18,9 @@ For a fresh checkout, install Node.js 22.12+ and Git, then run `npm install` and
 - Add accounts with a token or manual settings, use **Update token** or **Reauthenticate** independently, remove profiles, map projects, switch the selected workspace account and apply its mapping.
 - Run the same diagnostics, health check and dashboard commands. Prompts, confirmations and reports appear in VS Code. These retain the extension’s current capabilities and platform limitations.
 
-VS Code must stay open. A disconnected app shows connection instructions instead of an independent account registry. Selecting **Use for workspace** changes the Git identity/authentication of the first folder in the selected VS Code window, just as the extension does. Untrusted workspaces allow viewing only. GitHub CLI profiles retain the extension’s global CLI switching behavior; per-project AI-agent authentication is still planned.
+VS Code must stay open. A disconnected app shows connection instructions instead of an independent account registry. Selecting **Use for workspace** changes the Git identity/authentication of the first folder in the selected VS Code window, just as the extension does. Untrusted workspaces allow viewing only. GitHub CLI profiles retain the extension’s global CLI switching behavior.
+
+The first MOH-83 agent tool reads authenticated metadata for the repository open in a trusted VS Code window. Find its connection ID in `%USERPROFILE%\.git-identity-manager\connections`, then run `npm run agent:repo --prefix desktop -- --connection <id>`. The mapped account's token stays inside the extension; output contains repository metadata, permissions, and the verified username only. Missing mappings, changed accounts, invalid tokens, and non-GitHub remotes fail closed.
 
 ## Data and security
 
