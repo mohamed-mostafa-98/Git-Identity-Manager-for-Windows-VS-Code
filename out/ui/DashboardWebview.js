@@ -542,7 +542,7 @@ class DashboardWebview {
                     </div>
                     <div class="card-actions">
                         <button class="btn" onclick="sendMessage('switchProfile', {profileId: '${p.id}'})">Use for This Project</button>
-                        ${p.authenticationMethod === AccountProfile_1.AuthenticationMethod.HTTPS ? `<button class="btn btn-secondary" onclick="sendMessage('saveToken', {profileId: '${p.id}'})">Save / Update Token</button>` : ''}
+                        ${p.authenticationMethod === AccountProfile_1.AuthenticationMethod.HTTPS || p.authenticationMethod === AccountProfile_1.AuthenticationMethod.BROWSER_OAUTH ? `<button class="btn btn-secondary" onclick="sendMessage('saveToken', {profileId: '${p.id}'})">Save / Update Token</button>` : ''}
                         ${p.authenticationMethod === AccountProfile_1.AuthenticationMethod.BROWSER_OAUTH ? `<button class="btn btn-secondary" onclick="sendMessage('reauthenticate', {profileId: '${p.id}'})">Reauthenticate</button>` : ''}
                         <button class="btn btn-secondary" onclick="sendMessage('validateAuth', {profileId: '${p.id}'})">Health</button>
                         <button class="btn btn-danger" onclick="sendMessage('removeProfile', {profileId: '${p.id}'})">Remove</button>

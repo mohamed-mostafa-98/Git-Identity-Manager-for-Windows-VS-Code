@@ -36,7 +36,10 @@ class BrowserAuthStrategy {
         const vscode = require('vscode');
         try {
             logger_1.Logger.info('Triggering GitHub Browser OAuth authentication session...');
-            const session = await vscode.authentication.getSession('github', ['repo', 'user:email', 'read:user', 'workflow'], { forceNewSession: true });
+            const session = await vscode.authentication.getSession('github', ['repo', 'user:email', 'read:user', 'workflow'], {
+                clearSessionPreference: true,
+                forceNewSession: { detail: 'Choose the GitHub account you want to add or reauthenticate.' }
+            });
             if (!session) {
                 logger_1.Logger.warn('Browser authentication cancelled or failed: No session returned.');
                 return undefined;

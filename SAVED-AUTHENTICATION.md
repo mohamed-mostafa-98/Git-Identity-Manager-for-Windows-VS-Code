@@ -1,4 +1,4 @@
-# Saved authentication (version 1.4.0)
+# Saved authentication (version 1.5.0)
 
 Add each GitHub account once, then assign each repository to the account it should use.
 
@@ -10,7 +10,7 @@ Add each GitHub account once, then assign each repository to the account it shou
 
 Existing profiles: use **GitHub: Save or Update Account Token**, or the dashboard's **Save / Update Token** button. Other mapped repositories receive the replacement when next opened or synchronized. Switching explicitly works even when automatic switching is disabled. A more specific folder assignment wins over a parent folder rule.
 
-Browser profiles use **Reauthenticate** instead. The extension opens a fresh GitHub login and accepts it only when its username matches the selected profile. Success replaces the secure token while preserving the profile ID and mappings. Cancellation or signing into another account leaves the previous token unchanged.
+Browser profiles provide both **Save / Update Token** and **Reauthenticate**. Reauthenticate clears VS Code's remembered GitHub account choice. A matching login refreshes the secure token. A legacy username can be changed to GitHub's verified canonical username after confirmation, preserving the profile ID and mappings. If that verified username already belongs to another profile, nothing is overwritten.
 
 ## Token access
 

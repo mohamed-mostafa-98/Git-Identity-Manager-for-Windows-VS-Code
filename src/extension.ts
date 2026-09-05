@@ -188,7 +188,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         vscode.commands.registerCommand('githubAccountManager.reauthenticate', async (profileId?: string) => {
             try {
-                if (!profileId) throw new Error('Open the dashboard and choose the browser account to reauthenticate.');
+                if (!profileId) {
+                    const selected = await vscode.window.showQuickPick(
+                        profileManager.getProfiles()
+                            .filter(profile => profile.authenticationMethod === AuthenticationMethod.BROWSER_OAUTH)
+                            .map(profile => ({ label: profile.displayName, description: `@${profile.githubUsername}`, id: profile.id })),
+                        { title: 'Reauthenticate Browser Account', placeHolder: 'Choose the saved account to repair' }
+                    );
+                    profileId = selected?.id;
+                }
+                if (!profileId) return;
                 const saved = await quickPickMenu.reauthenticate(profileId);
                 const folder = vscode.workspace.workspaceFolders?.[0];
                 const repository = saved && folder ? await repoDetector.detectRepository(folder.uri.fsPath) : undefined;

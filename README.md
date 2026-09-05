@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.75%2B-007ACC)](https://code.visualstudio.com/)
-[![Current release](https://img.shields.io/badge/release-1.4.0-2563eb)](RELEASES.md)
+[![Current release](https://img.shields.io/badge/release-1.5.0-2563eb)](RELEASES.md)
 
 Manage personal, work, and client GitHub accounts without deleting credentials or signing in again whenever you change projects.
 
@@ -25,12 +25,12 @@ The VS Code extension is the source of truth for accounts, project mappings, Git
 
 1. Download or clone this repository.
 2. In VS Code, open **Extensions**, select `…`, then **Install from VSIX…**.
-3. Choose `github-account-manager-1.4.0.vsix` and reload VS Code.
+3. Choose `github-account-manager-1.5.0.vsix` and reload VS Code.
 
 Or use the terminal:
 
 ```powershell
-code --install-extension github-account-manager-1.4.0.vsix
+code --install-extension github-account-manager-1.5.0.vsix
 ```
 
 ### Build from source
@@ -96,7 +96,7 @@ The supported manual PAT update is:
 4. Open each mapped repository when needed and run **Switch Account Profile** or **Apply & Sync Identity**. This refreshes its Git Credential Manager entry.
 5. Run **Health** to confirm the token belongs to the expected account and reaches the repository push endpoint.
 
-For a browser-login profile, click **Reauthenticate** on its dashboard card. Sign into the same username shown on that profile. The extension preserves its profile ID and mappings; cancellation or a different username leaves the existing credential unchanged.
+For a browser-login profile, click **Reauthenticate** on its dashboard card. VS Code clears its remembered account choice so you can select the intended GitHub account. If an older profile contains a non-canonical username such as `ctrl_eg` and GitHub verifies `ctrleg`, confirm **Update Profile** to repair the username while preserving its ID and project mappings. If the verified account already belongs to another profile, the extension keeps both profiles unchanged. **Save / Update Token** remains available for manual replacement.
 
 To revoke access, revoke the token on GitHub, remove its extension profile if no longer needed, and remove the repository-specific Windows credential. Deleting a profile removes the SecretStorage copy and mappings but cannot revoke a token at GitHub and may not remove every previously written GCM entry.
 
@@ -128,6 +128,7 @@ Keep the local VS Code window open and select it in the desktop app. Login promp
 
 | Version | Main changes |
 |---|---|
+| **1.5.0** | Reliable browser account selection, safe legacy username repair, duplicate-account protection, and separate Update Token/Reauthenticate actions |
 | **1.4.0** | Reauthenticate an invalid browser-login profile in place; preserves mappings and accepts safe opaque OAuth/PAT token characters |
 | **1.3.0** | Repository-aware token Health check; identifies invalid/wrong-account tokens, missing repository access, SSO/rate limiting, and push-endpoint rejection without pushing |
 | **1.2.1** | Corrected the current GCM Windows vault backend name to `wincredman` |

@@ -11,7 +11,7 @@ The tool supports four authentication strategies for GitHub account profiles:
 
 ### Reauthenticating browser accounts
 
-Use the dashboard's **Reauthenticate** button or **GitHub: Reauthenticate Browser Account**. A fresh browser session must return the same GitHub username as the selected profile. On success, only the secure token and verified email are refreshed; the profile ID and repository mappings remain unchanged. Cancellation or a different GitHub username does not overwrite the existing credential.
+Use the dashboard's **Reauthenticate** button or **GitHub: Reauthenticate Browser Account**. VS Code clears its remembered account preference and asks which GitHub account to use. Matching accounts refresh the secure token and email. If GitHub returns a canonical username that differs from legacy metadata, you can confirm the username repair without changing the profile ID or mappings. An account already saved under another profile is rejected, and cancellation does not overwrite the credential. **Save / Update Token** remains available for manual token replacement.
 
 ---
 

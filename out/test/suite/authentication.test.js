@@ -93,6 +93,7 @@ suite('Saved authentication and repository assignment', () => {
         await manager.saveProfile(work, 'test_token');
         assert.strictEqual(secrets.get('github_token_work'), 'test_token');
         assert.ok(!JSON.stringify([...state]).includes('test_token'));
+        await assert.rejects(() => manager.saveProfile({ ...work, id: 'duplicate' }), /already saved as 'Work'/);
         await manager.removeProfile(work.id);
         assert.strictEqual(secrets.size, 0);
     });
@@ -126,7 +127,7 @@ suite('Saved authentication and repository assignment', () => {
         const fake = {
             env: { uiKind: 1 }, UIKind: { Desktop: 1 },
             workspace: { isTrusted: true, workspaceFolders: [{ uri: { fsPath: rootPath } }], getConfiguration: () => ({ get: () => false }), onDidChangeWorkspaceFolders: noop },
-            window: { createStatusBarItem: () => ({ show() { }, dispose() { } }), registerTreeDataProvider: noop, showInputBox: async () => 'Browser account', showInformationMessage: noop, showErrorMessage: (m) => errors.push(m) },
+            window: { createStatusBarItem: () => ({ show() { }, dispose() { } }), registerTreeDataProvider: noop, showInputBox: async () => 'Browser account', showInformationMessage: noop, showWarningMessage: async () => 'Update Profile', showErrorMessage: (m) => errors.push(m) },
             commands: { registerCommand: (name, cb) => { commands.set(name, cb); return noop(); } },
             extensions: { getExtension: () => undefined }, StatusBarAlignment: { Left: 1 },
             EventEmitter: class {
@@ -180,9 +181,18 @@ suite('Saved authentication and repository assignment', () => {
             assert.strictEqual(reauthenticated.profiles[2].id, oauthId);
             assert.strictEqual(reauthenticated.profiles[2].githubEmail, 'updated@example.com');
             assert.strictEqual(savedSecrets.get(`github_token_${oauthId}`), 'replacement-token');
-            BrowserAuthStrategy_1.BrowserAuthStrategy.prototype.loginViaBrowser = async () => ({ username: 'wrong-user', email: '', displayName: '', accessToken: 'wrong-token' });
-            await assert.rejects(() => bridgeHandler({ action: 'reauthenticate', id: oauthId }), /Signed in as @wrong-user/);
+            state.get('github_account_profiles_v1')[2].githubUsername = 'new_user'; // legacy value accepted by older releases
+            const mappingCount = state.get('github_repository_mappings_v1').length;
+            const migrated = await bridgeHandler({ action: 'reauthenticate', id: oauthId });
+            assert.strictEqual(migrated.profiles[2].githubUsername, 'new-user');
+            assert.strictEqual(migrated.profiles[2].id, oauthId);
+            assert.strictEqual(state.get('github_repository_mappings_v1').length, mappingCount);
+            BrowserAuthStrategy_1.BrowserAuthStrategy.prototype.loginViaBrowser = async () => ({ username: 'work', email: '', displayName: '', accessToken: 'wrong-token' });
+            await assert.rejects(() => bridgeHandler({ action: 'reauthenticate', id: oauthId }), /already belongs to 'Work'/);
             assert.strictEqual(savedSecrets.get(`github_token_${oauthId}`), 'replacement-token');
+            HTTPSAuthStrategy_1.HTTPSAuthStrategy.prototype.configureHTTPSAuth = async () => true;
+            await commands.get('githubAccountManager.switchAccount')({ profile: state.get('github_account_profiles_v1')[2] });
+            assert.strictEqual(state.get('github_active_profile_id_v1'), oauthId);
             fake.workspace.isTrusted = false;
             await assert.rejects(() => bridgeHandler({ action: 'browserLogin' }), /Trust/);
         }

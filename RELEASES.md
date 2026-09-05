@@ -2,6 +2,16 @@
 
 The source repository contains installable VSIX artifacts for local testing. Install a file through **Extensions → … → Install from VSIX…**, then reload VS Code. Published marketplace/GitHub releases are a future delivery step unless a release page explicitly says otherwise.
 
+## 1.5.0 — Reliable multi-account reauthentication
+
+- Clears VS Code's remembered GitHub session choice and prompts for the account on browser login and reauthentication.
+- Repairs legacy saved usernames when GitHub returns the canonical username, after explicit confirmation, while preserving the profile ID and project mappings.
+- Refuses to merge into an account already owned by another saved profile.
+- Keeps **Save / Update Token** and **Reauthenticate** as separate actions for browser profiles.
+- Lets the Command Palette reauthentication command select a browser profile when one was not supplied by the dashboard.
+
+Artifact: `github-account-manager-1.5.0.vsix`
+
 ## 1.4.0 — Browser account reauthentication
 
 - Adds **Reauthenticate** to browser-login profiles in the dashboard and desktop companion.

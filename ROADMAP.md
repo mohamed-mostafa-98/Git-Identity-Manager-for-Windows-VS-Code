@@ -1,6 +1,6 @@
 # Product Roadmap
 
-## Delivered through 1.4.0
+## Delivered through 1.5.0
 - [x] Windows & VS Code extension architecture.
 - [x] Multiple Account Profiles (Personal, Work, Client).
 - [x] Secure storage via VS Code SecretStorage API & Windows Credential Manager.
@@ -15,6 +15,7 @@
 - [x] Desktop companion view of the same running extension data and actions.
 - [x] Repository-aware saved-token Health check without pushing.
 - [x] In-place browser-account reauthentication with same-username protection.
+- [x] Explicit browser account selection, canonical username repair, and duplicate-account protection.
 
 ## Milestone 2: Secure authentication completion (MOH-82)
 - [ ] Verify two real accounts remain isolated across repositories.

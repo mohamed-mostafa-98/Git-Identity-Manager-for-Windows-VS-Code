@@ -196,12 +196,22 @@ export class QuickPickMenu {
         }
         const user = await this.browserAuth.loginViaBrowser();
         if (!user) return undefined;
+        let githubUsername = profile.githubUsername;
         if (user.username.toLowerCase() !== profile.githubUsername.toLowerCase()) {
-            throw new Error(`Signed in as @${user.username}. Reauthenticate this profile as @${profile.githubUsername}, or add the other account separately.`);
+            const other = this.profileManager.getProfileByUsername(user.username);
+            if (other && other.id !== profile.id) {
+                throw new Error(`Signed in as @${user.username}, which already belongs to '${other.displayName}'. Sign out of that GitHub browser session and retry @${profile.githubUsername}, or use the existing profile.`);
+            }
+            const choice = await vscode.window.showWarningMessage(
+                `This profile says @${profile.githubUsername}, but GitHub verified @${user.username}. Update this profile to the verified username? Its project mappings will be preserved.`,
+                { modal: true }, 'Update Profile'
+            );
+            if (choice !== 'Update Profile') return undefined;
+            githubUsername = user.username;
         }
-        const updated = { ...profile, githubEmail: user.email || profile.githubEmail, updatedAt: new Date().toISOString() };
+        const updated = { ...profile, githubUsername, githubEmail: user.email || profile.githubEmail, updatedAt: new Date().toISOString() };
         await this.profileManager.saveProfile(updated, user.accessToken);
-        vscode.window.showInformationMessage(`Reauthenticated '${profile.displayName}' as @${profile.githubUsername}. Project mappings were preserved.`);
+        vscode.window.showInformationMessage(`Reauthenticated '${profile.displayName}' as @${githubUsername}. Project mappings were preserved.`);
         return updated;
     }
 

@@ -7,8 +7,9 @@
 - **Solution**: Click the account's **Health** button. For browser accounts, use **Reauthenticate** if the token is invalid. For PAT accounts, run **GitHub: Save or Update Account Token**. Then run **GitHub: Switch Account Profile** to refresh the repository-specific GCM entry.
 
 ### 2. `Invalid GitHub username or token`
-- Install extension 1.4.0 or later. Earlier validation rejected some safe opaque token characters.
-- Browser account: click **Reauthenticate** and sign into the same username shown on the profile. A different login is rejected without replacing the saved credential.
+- Install extension 1.5.0. It accepts safe opaque token characters and repairs legacy usernames.
+- Browser account: click **Reauthenticate**, then select the intended GitHub account. If the profile says `ctrl_eg` but GitHub verifies `ctrleg`, confirm **Update Profile**. GitHub usernames cannot contain underscores.
+- If the verified account already belongs to another profile, use that existing profile or authenticate as the intended account; the extension will not merge their credentials.
 - PAT account: run **GitHub: Save or Update Account Token** and paste the replacement in the masked prompt.
 
 ### 3. `Permission denied (publickey)` over SSH

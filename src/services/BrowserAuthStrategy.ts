@@ -22,7 +22,10 @@ export class BrowserAuthStrategy {
             const session = await vscode.authentication.getSession(
                 'github',
                 ['repo', 'user:email', 'read:user', 'workflow'],
-                { forceNewSession: true }
+                {
+                    clearSessionPreference: true,
+                    forceNewSession: { detail: 'Choose the GitHub account you want to add or reauthenticate.' }
+                }
             );
 
             if (!session) {

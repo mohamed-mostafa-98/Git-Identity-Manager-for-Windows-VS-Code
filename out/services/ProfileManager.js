@@ -41,6 +41,9 @@ class ProfileManager {
         if ([profile.displayName, profile.githubEmail, profile.sshProfileHostAlias, profile.sshKeyPath].some(value => value !== undefined && (typeof value !== 'string' || /[\r\n\0]/.test(value)))) {
             throw new Error('Profile fields cannot contain line breaks or control characters.');
         }
+        const duplicate = this.getProfiles().find(p => p.id !== profile.id && p.githubUsername.toLowerCase() === profile.githubUsername.toLowerCase());
+        if (duplicate)
+            throw new Error(`GitHub account @${profile.githubUsername} is already saved as '${duplicate.displayName}'.`);
         if (token !== undefined) {
             const user = await new BrowserAuthStrategy_1.BrowserAuthStrategy().fetchGitHubUserProfile(token);
             if (!user || user.username.toLowerCase() !== profile.githubUsername.toLowerCase()) {

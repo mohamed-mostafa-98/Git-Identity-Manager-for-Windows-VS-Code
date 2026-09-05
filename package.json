@@ -2,7 +2,7 @@
   "name": "github-account-manager",
   "displayName": "GitHub Account & Git Identity Manager",
   "description": "Production-grade Windows & VS Code tool for seamlessly switching and managing multiple GitHub accounts and Git identities.",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "publisher": "mohammed-dev",
   "license": "MIT",
   "repository": {
