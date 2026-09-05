@@ -55,7 +55,8 @@ suite('Saved authentication and repository assignment', () => {
         const store = calls.find(c => c[1].includes('store'));
         assert.ok(store);
         assert.strictEqual(store[3], 'protocol=https\nhost=github.com\npath=company/app.git\nusername=work\npassword=test_token\n\n');
-        assert.strictEqual(store[2]?.env?.GCM_CREDENTIAL_STORE, 'wincred');
+        assert.strictEqual(store[2]?.env?.GCM_CREDENTIAL_STORE, 'wincredman');
+        assert.ok(calls.some(c => c[1].includes('credential.credentialStore') && c[1].includes('wincredman')));
         assert.ok(calls.every(c => !JSON.stringify(c.slice(0, 3)).includes('test_token')));
         assert.ok(calls.some(c => c[1].includes('credential.https://github.com.username') && c[1].includes('work')));
         for (const failedCommand of ['--version', 'config', 'store']) {

@@ -41,6 +41,7 @@ const QuickPickMenu_1 = require("./ui/QuickPickMenu");
 const DashboardWebview_1 = require("./ui/DashboardWebview");
 const logger_1 = require("./utils/logger");
 const AccountProfile_1 = require("./models/AccountProfile");
+const TokenHealthService_1 = require("./services/TokenHealthService");
 const DesktopBridge_1 = require("./services/DesktopBridge");
 let statusBarController;
 async function activate(context) {
@@ -282,19 +283,24 @@ async function activate(context) {
             language: 'markdown'
         });
         await vscode.window.showTextDocument(doc);
-    }), vscode.commands.registerCommand('githubAccountManager.validateAuthentication', async () => {
-        const active = profileManager.getActiveProfile();
+    }), vscode.commands.registerCommand('githubAccountManager.validateAuthentication', async (target) => {
+        const id = typeof target === 'string' ? target : target?.profile?.id;
+        const folder = vscode.workspace.workspaceFolders?.[0];
+        const repository = folder ? await repoDetector.detectRepository(folder.uri.fsPath) : undefined;
+        const active = id ? profileManager.getProfileById(id) : (repository && repoMapper.resolveProfileForRepository(repository)) || profileManager.getActiveProfile();
         if (!active) {
             vscode.window.showWarningMessage('No active profile selected.');
             return;
         }
-        const ghStatus = await ghCliStrategy.checkStatus();
-        const msg = `Authentication Health for Profile '${active.displayName}':\n\n` +
-            `- Strategy: ${active.authenticationMethod}\n` +
-            `- GitHub Username: ${active.githubUsername}\n` +
-            `- GitHub Email: ${active.githubEmail}\n` +
-            `- gh CLI Installed: ${ghStatus.isInstalled ? 'Yes' : 'No'}`;
-        vscode.window.showInformationMessage(msg, { modal: true }, 'OK');
+        try {
+            const lines = [AccountProfile_1.AuthenticationMethod.HTTPS, AccountProfile_1.AuthenticationMethod.BROWSER_OAUTH].includes(active.authenticationMethod)
+                ? await new TokenHealthService_1.TokenHealthService().check(active, await secretService.getToken(active.id), repository)
+                : [`This profile uses ${active.authenticationMethod}. Saved-token checks do not verify SSH keys or GitHub CLI credentials.`];
+            await vscode.window.showInformationMessage(`Authentication Health: ${active.displayName}\n\n${lines.join('\n\n')}`, { modal: true }, 'OK');
+        }
+        catch (error) {
+            showFailure(error);
+        }
     }));
     // Register Git Push Interceptor for Push Protection
     try {

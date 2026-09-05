@@ -100,10 +100,7 @@ class DashboardWebview {
                         await this._updateWebview();
                         break;
                     case 'validateAuth':
-                        const target = this.profileManager.getProfileById(message.profileId);
-                        if (target) {
-                            vscode.window.showInformationMessage(`Profile '${target.displayName}' is configured with method: ${target.authenticationMethod}`);
-                        }
+                        await vscode.commands.executeCommand('githubAccountManager.validateAuthentication', message.profileId);
                         break;
                     case 'runDiagnostics':
                         const report = await this.diagnosticsService.generateReport();
