@@ -27,14 +27,16 @@ exports.DashboardWebview = void 0;
 const vscode = __importStar(require("vscode"));
 const AccountProfile_1 = require("../models/AccountProfile");
 const logger_1 = require("../utils/logger");
+const AgentApproval_1 = require("../services/AgentApproval");
 class DashboardWebview {
-    constructor(panel, extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncCallback) {
+    constructor(panel, extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncCallback, getAgentApproval) {
         this.profileManager = profileManager;
         this.repoDetector = repoDetector;
         this.repoMapper = repoMapper;
         this.gitIdentityManager = gitIdentityManager;
         this.diagnosticsService = diagnosticsService;
         this.syncCallback = syncCallback;
+        this.getAgentApproval = getAgentApproval;
         this._disposables = [];
         this._panel = panel;
         this._extensionUri = extensionUri;
@@ -97,6 +99,9 @@ class DashboardWebview {
                         vscode.window.showInformationMessage(`Removed mapping rule.`);
                         await this._updateWebview();
                         break;
+                    case 'manageAgentAccess':
+                        await vscode.commands.executeCommand('githubAccountManager.manageAgentAccess');
+                        break;
                     case 'syncWorkspaceIdentity':
                         await this.syncCallback();
                         vscode.window.showInformationMessage(`Synchronized workspace Git identity.`);
@@ -120,7 +125,7 @@ class DashboardWebview {
             }
         }, null, this._disposables);
     }
-    static createOrShow(extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncCallback) {
+    static createOrShow(extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncCallback, getAgentApproval) {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
@@ -133,7 +138,7 @@ class DashboardWebview {
             enableScripts: true,
             localResourceRoots: [extensionUri]
         });
-        DashboardWebview.currentPanel = new DashboardWebview(panel, extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncCallback);
+        DashboardWebview.currentPanel = new DashboardWebview(panel, extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncCallback, getAgentApproval);
         return DashboardWebview.currentPanel;
     }
     static refresh() {
@@ -163,6 +168,7 @@ class DashboardWebview {
         let repoDetails = null;
         let localIdentity = null;
         let mappedProfileName = 'None';
+        let mappedProfile;
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
             const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             const detected = await this.repoDetector.detectRepository(rootPath);
@@ -171,10 +177,19 @@ class DashboardWebview {
                 localIdentity = await this.gitIdentityManager.getLocalIdentity(rootPath);
                 const mapped = this.repoMapper.resolveProfileForRepository(detected);
                 if (mapped) {
+                    mappedProfile = mapped;
                     mappedProfileName = mapped.displayName;
                 }
             }
         }
+        const approval = this.getAgentApproval();
+        const agentEnabled = !!(vscode.workspace.isTrusted && repoDetails && mappedProfile && approval === (0, AgentApproval_1.agentApprovalKey)(repoDetails, mappedProfile));
+        const agentHelp = !vscode.workspace.isTrusted ? 'Trust this workspace before enabling access.'
+            : !repoDetails ? 'Open a Git project to enable access.'
+                : !mappedProfile ? 'Assign this project to an account first.'
+                    : approval && !agentEnabled ? 'The saved approval does not match this project/account. Clear it, then enable access again.'
+                        : agentEnabled ? 'Local AI tools can read this project’s GitHub metadata using the account below.'
+                            : 'AI tools cannot read this project through this extension until you enable access.';
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -469,6 +484,16 @@ class DashboardWebview {
             <button class="btn btn-secondary" onclick="sendMessage('refresh')">🔄 Refresh</button>
         </div>
     </header>
+
+    <section class="card" aria-labelledby="agent-access-heading" style="margin-bottom:24px; overflow-wrap:anywhere;">
+        <h2 id="agent-access-heading">AI Agent Access <span class="badge">${agentEnabled ? 'Enabled — read only' : 'Disabled'}</span></h2>
+        <p>${agentHelp}</p>
+        <p><strong>Project:</strong> ${repoDetails ? this.escapeHtml(repoDetails.owner + '/' + repoDetails.repoName) : 'No Git project open'}<br>
+        <strong>Account:</strong> ${mappedProfile ? this.escapeHtml(mappedProfile.displayName + ' (@' + mappedProfile.githubUsername + ')') : 'No account assigned'}</p>
+        <p>Allows repository information only. It does not allow edits or pushes. Your GitHub token stays in VS Code.</p>
+        <button class="btn ${approval ? 'btn-danger' : ''}" onclick="sendMessage('manageAgentAccess')" ${!approval && (!vscode.workspace.isTrusted || !repoDetails || !mappedProfile) ? 'disabled' : ''}>${approval ? (agentEnabled ? 'Disable AI Access' : 'Clear Previous Approval') : 'Enable AI Access'}</button>
+        <p class="subtitle">Applies to the first project folder in this VS Code window. Use Refresh after changing its remote.</p>
+    </section>
 
     <div class="tab-bar">
         <button class="tab-btn active" onclick="switchTab('profiles')">👤 Account Profiles (${profiles.length})</button>

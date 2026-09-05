@@ -2,6 +2,25 @@
 
 The source repository contains installable VSIX artifacts for local testing. Install a file through **Extensions → … → Install from VSIX…**, then reload VS Code. Published marketplace/GitHub releases are a future delivery step unless a release page explicitly says otherwise.
 
+## 1.6.2 — Clear dashboard controls for AI access
+
+- Shows an AI Agent Access card above the dashboard tabs, with the current project, account and Enabled/Disabled status.
+- Provides **Enable AI Access**, **Disable AI Access**, or **Clear Previous Approval** when the saved context no longer matches.
+- Explains read-only scope and missing setup; refreshes after approval actions, including Command Palette actions.
+- Keeps the existing approval and credential security checks.
+
+Artifact: `github-account-manager-1.6.2.vsix`. Install and reload VS Code, then open the control panel dashboard.
+
+## 1.6.1 — Explicit repository approval for AI agents
+
+- Adds **Manage AI Agent Access** to the VS Code command palette and extension dashboard.
+- CLI/MCP repository reads start disabled until you confirm the repository and account.
+- Run the control again to withdraw approval, including while a request is running.
+- Different repository paths, remotes, accounts, usernames or authentication methods do not match the saved approval. Restoring the exact approved context matches again unless approval was withdrawn.
+- Credentials remain inside VS Code. Existing Git push/pull and account switching are unchanged.
+
+Artifact: `github-account-manager-1.6.1.vsix`. This updates the extension; the desktop/MCP companion remains version 0.3.0. Pull-request tools and live two-account/platform verification remain pending.
+
 ## 1.6.0 — Authenticated agent repository metadata and MCP
 
 - Adds the first read-only MOH-83 agent CLI for the repository open in a trusted VS Code window.

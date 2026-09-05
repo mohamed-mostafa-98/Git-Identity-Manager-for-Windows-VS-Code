@@ -17,6 +17,7 @@ import { Logger } from './utils/logger';
 import { AuthenticationMethod } from './models/AccountProfile';
 import { TokenHealthService } from './services/TokenHealthService';
 import { startDesktopBridge } from './services/DesktopBridge';
+import { agentApprovalKey, requireAgentApproval } from './services/AgentApproval';
 
 let statusBarController: StatusBarController | undefined;
 
@@ -34,6 +35,36 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const sshAuthStrategy = new SSHAuthStrategy();
     const ghCliStrategy = new GitHubCliStrategy();
     const diagnosticsService = new DiagnosticsService(profileManager, repoDetector, ghCliStrategy);
+    const approvalStateKey = 'githubAccountManager.agentApproval';
+    const agentContext = async () => {
+        if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace before granting agent access.');
+        const folder = vscode.workspace.workspaceFolders?.[0];
+        const repository = folder && await repoDetector.detectRepository(folder.uri.fsPath);
+        if (!repository) throw new Error('Open a Git repository with an origin remote.');
+        const profile = repoMapper.resolveProfileForRepository(repository);
+        if (!profile) throw new Error('Assign this repository to an account before granting agent access.');
+        return { repository, profile, key: agentApprovalKey(repository, profile) };
+    };
+    context.subscriptions.push(vscode.commands.registerCommand('githubAccountManager.manageAgentAccess', async () => {
+        try {
+            // Withdrawal must remain available even if the repository or mapping disappeared.
+            if (context.workspaceState.get(approvalStateKey)) {
+                await context.workspaceState.update(approvalStateKey, undefined);
+                await vscode.window.showInformationMessage('AI-agent access withdrawn. Run this command again to approve the current repository.');
+                return;
+            }
+            const target = await agentContext();
+            const choice = await vscode.window.showInformationMessage(
+                `AI-agent access is disabled. Enable read-only access to ${target.repository.owner}/${target.repository.repoName} as ${target.profile.githubUsername}? Local MCP clients will be able to read repository metadata through this VS Code window.`,
+                { modal: true }, 'Enable read-only access');
+            if (choice !== 'Enable read-only access') return;
+            const current = await agentContext();
+            if (current.key !== target.key) throw new Error('Repository or account changed. Review access again.');
+            await context.workspaceState.update(approvalStateKey, current.key);
+            await vscode.window.showInformationMessage('AI-agent read-only access enabled. Use Manage AI Agent Access to withdraw it.');
+        } catch (error) { showFailure(error); }
+        finally { DashboardWebview.refresh(); }
+    }));
 
     // UI Controllers & Tree Views
     statusBarController = new StatusBarController(profileManager);
@@ -133,7 +164,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 repoMapper,
                 gitIdentityManager,
                 diagnosticsService,
-                syncWorkspaceProfile
+                syncWorkspaceProfile,
+                () => context.workspaceState.get(approvalStateKey)
             );
         }),
 
@@ -366,13 +398,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             const bridge = await startDesktopBridge(vscode.workspace.name || 'VS Code — no folder', async request => {
                 try {
                 if (request.action === 'agentRepository') {
-                    if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace before granting agent access.');
-                    const folder = vscode.workspace.workspaceFolders?.[0];
-                    const repository = folder && await repoDetector.detectRepository(folder.uri.fsPath);
-                    if (!repository) throw new Error('Open a Git repository with an origin remote.');
-                    const profile = repoMapper.resolveProfileForRepository(repository);
-                    if (!profile) throw new Error('Assign this repository to an account before granting agent access.');
-                    return new TokenHealthService().repositoryMetadata(profile, await secretService.getToken(profile.id), repository);
+                    const { repository, profile, key } = await agentContext();
+                    requireAgentApproval(context.workspaceState.get(approvalStateKey), key);
+                    const result = await new TokenHealthService().repositoryMetadata(profile, await secretService.getToken(profile.id), repository);
+                    const current = await agentContext();
+                    requireAgentApproval(context.workspaceState.get(approvalStateKey), key);
+                    requireAgentApproval(current.key, key);
+                    return result;
                 }
                 if (request.action !== 'snapshot') {
                     if (!vscode.workspace.isTrusted) throw new Error('Trust the VS Code workspace before changing accounts.');

@@ -9,7 +9,7 @@ Prepare:
 - Two GitHub accounts, referred to below as **Account A** and **Account B**.
 - One repository that Account A can push to and one repository that Account B can push to.
 - A harmless branch in each repository. Do not test against a protected production branch.
-- VS Code with `github-account-manager-1.6.0.vsix` installed and the window reloaded.
+- VS Code with `github-account-manager-1.6.2.vsix` installed and the window reloaded.
 - Git Credential Manager installed for HTTPS testing.
 - A clone of this source project for the desktop and MCP commands.
 
@@ -126,8 +126,8 @@ Pass when every request fails closed with a useful error and no token, credentia
 Before closing MOH-83, implement and verify:
 
 - Read-only pull-request listing and pull-request detail tools.
-- An explicit per-repository approval control showing that AI-agent access is enabled.
-- Denial when approval is missing or withdrawn.
+- Implemented in 1.6.2: **GitHub: Manage AI Agent Access** (also in the extension dashboard) enables read-only access after confirmation and withdraws it on the next invocation. Install the 1.6.2 VSIX before testing.
+- Automated checks cover dismissed/missing approval, successful approval, changed remote/account, and withdrawal during an in-flight request. Live enable/denial/withdrawal verification remains required.
 - Concurrent A/B routing tests for repository and pull-request tools.
 - Documentation for configuring at least one real MCP client.
 

@@ -10,6 +10,7 @@ import { GitIdentityManager } from '../../services/GitIdentityManager';
 import { SecretStorageService } from '../../services/SecretStorageService';
 import { AccountProfile, AuthenticationMethod } from '../../models/AccountProfile';
 import * as DesktopBridge from '../../services/DesktopBridge';
+import { TokenHealthService } from '../../services/TokenHealthService';
 
 const personal: AccountProfile = { id: 'personal', displayName: 'Personal', githubUsername: 'personal', githubEmail: 'personal@example.com', authenticationMethod: AuthenticationMethod.HTTPS, createdAt: '', updatedAt: '' };
 const work = { ...personal, id: 'work', displayName: 'Work', githubUsername: 'work' };
@@ -96,6 +97,9 @@ suite('Saved authentication and repository assignment', () => {
         const originalIdentity = GitIdentityManager.prototype.setLocalIdentity;
         const originalBridge = DesktopBridge.startDesktopBridge;
         const originalLogin = BrowserAuthStrategy.prototype.loginViaBrowser;
+        const originalMetadata = TokenHealthService.prototype.repositoryMetadata;
+        const approvals = new Map<string, unknown>();
+        let approvalChoice: string | undefined;
         let bridgeHandler: (request: DesktopBridge.BridgeRequest) => Promise<any>;
         (DesktopBridge as any).startDesktopBridge = async (_label: string, handler: typeof bridgeHandler) => { bridgeHandler = handler; return { dispose() {} }; };
         const commands = new Map<string, (...args: any[]) => Promise<void>>();
@@ -108,7 +112,7 @@ suite('Saved authentication and repository assignment', () => {
         const fake = {
             env: { uiKind: 1 }, UIKind: { Desktop: 1 },
             workspace: { isTrusted: true, workspaceFolders: [{ uri: { fsPath: rootPath } }], getConfiguration: () => ({ get: () => false }), onDidChangeWorkspaceFolders: noop },
-            window: { createStatusBarItem: () => ({ show() {}, dispose() {} }), registerTreeDataProvider: noop, showInputBox: async () => 'Browser account', showInformationMessage: noop, showWarningMessage: async () => 'Update Profile', showErrorMessage: (m: string) => errors.push(m) },
+            window: { createStatusBarItem: () => ({ show() {}, dispose() {} }), registerTreeDataProvider: noop, showInputBox: async () => 'Browser account', showInformationMessage: async () => approvalChoice, showWarningMessage: async () => 'Update Profile', showErrorMessage: (m: string) => errors.push(m) },
             commands: { registerCommand: (name: string, cb: any) => { commands.set(name, cb); return noop(); } },
             extensions: { getExtension: () => undefined }, StatusBarAlignment: { Left: 1 },
             EventEmitter: class { event = noop; fire() {} }, TreeItem: class {}, ThemeColor: class {}
@@ -124,6 +128,7 @@ suite('Saved authentication and repository assignment', () => {
             HTTPSAuthStrategy.prototype.configureHTTPSAuth = async (_, profile, __, token) => { applied.push(profile.id); assert.strictEqual(token, 'test_token'); return true; };
             GitIdentityManager.prototype.setLocalIdentity = async () => true;
             await require('../../extension').activate({
+                workspaceState: { get: (k: string) => approvals.get(k), update: async (k: string, v: unknown) => { approvals.set(k, v); } },
                 subscriptions: [], globalState: { get: (k: string, fallback: any) => state.get(k) ?? fallback, update: async (k: string, v: any) => { state.set(k, v); } },
                 secrets: { get: async () => 'test_token', store: async (key: string, token: string) => savedSecrets.set(key, token) }
             });
@@ -140,6 +145,39 @@ suite('Saved authentication and repository assignment', () => {
             assert.strictEqual(snapshot.profiles.length, 2);
             assert.strictEqual(snapshot.mappings[0].profileId, 'work');
             assert.ok(!JSON.stringify(snapshot).includes('test_token'));
+            let metadataCalls = 0;
+            const dashboard = Object.assign(Object.create(require('../../ui/DashboardWebview').DashboardWebview.prototype), {
+                profileManager: { getProfiles: () => [personal, work], getActiveProfileId: () => 'work', getMappings: () => [] },
+                repoDetector: new RepositoryDetector(), repoMapper: { resolveProfileForRepository: () => work },
+                gitIdentityManager: { getLocalIdentity: async () => undefined },
+                getAgentApproval: () => approvals.get('githubAccountManager.agentApproval')
+            });
+            const dashboardHtml = () => dashboard._getHtmlForWebview({});
+            assert.match(await dashboardHtml(), />Enable AI Access<\/button>/);
+            TokenHealthService.prototype.repositoryMetadata = async () => { metadataCalls++; return { repository: 'company/app' } as any; };
+            await assert.rejects(() => bridgeHandler!({ action: 'agentRepository' }), /access is disabled/);
+            await commands.get('githubAccountManager.manageAgentAccess')!(); // dismiss approval
+            await assert.rejects(() => bridgeHandler!({ action: 'agentRepository' }), /access is disabled/);
+            assert.strictEqual(metadataCalls, 0);
+            approvalChoice = 'Enable read-only access';
+            await commands.get('githubAccountManager.manageAgentAccess')!();
+            assert.deepStrictEqual(await bridgeHandler!({ action: 'agentRepository' }), { repository: 'company/app' });
+            assert.match(await dashboardHtml(), /Enabled — read only/);
+            assert.match(await dashboardHtml(), />Disable AI Access<\/button>/);
+            RepositoryDetector.prototype.detectRepository = async () => ({ ...repo, remoteUrl: 'https://github.com/company/other.git' });
+            await assert.rejects(() => bridgeHandler!({ action: 'agentRepository' }), /access is disabled/);
+            assert.match(await dashboardHtml(), />Clear Previous Approval<\/button>/);
+            RepositoryDetector.prototype.detectRepository = async () => repo;
+            state.get('github_repository_mappings_v1')[0].profileId = 'personal';
+            await assert.rejects(() => bridgeHandler!({ action: 'agentRepository' }), /access is disabled/);
+            state.get('github_repository_mappings_v1')[0].profileId = 'work';
+            assert.strictEqual(metadataCalls, 1);
+            TokenHealthService.prototype.repositoryMetadata = async () => {
+                await commands.get('githubAccountManager.manageAgentAccess')!(); // withdraw during a request
+                return { repository: 'company/app' } as any;
+            };
+            await assert.rejects(() => bridgeHandler!({ action: 'agentRepository' }), /access is disabled/);
+            await assert.rejects(() => bridgeHandler!({ action: 'agentRepository' }), /access is disabled/);
             BrowserAuthStrategy.prototype.loginViaBrowser = async () => ({ username: 'new-user', email: 'new@example.com', displayName: 'New', accessToken: 'browser_token' });
             BrowserAuthStrategy.prototype.fetchGitHubUserProfile = async () => ({ username: 'new-user', email: 'new@example.com', displayName: 'New' });
             const loggedIn = await bridgeHandler!({ action: 'browserLogin' });
@@ -171,6 +209,7 @@ suite('Saved authentication and repository assignment', () => {
         } finally {
             (DesktopBridge as any).startDesktopBridge = originalBridge;
             BrowserAuthStrategy.prototype.loginViaBrowser = originalLogin;
+            TokenHealthService.prototype.repositoryMetadata = originalMetadata;
             Module._load = originalLoad;
             for (const [id, value] of cached) { if (value) require.cache[id] = value; else delete require.cache[id]; }
             RepositoryDetector.prototype.detectRepository = originalDetect;

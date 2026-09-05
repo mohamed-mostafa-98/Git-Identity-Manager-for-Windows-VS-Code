@@ -4,7 +4,7 @@ Electron + TypeScript + native HTML/CSS, MIT licensed. The desktop is another vi
 
 ## Run
 
-1. Install `github-account-manager-1.6.0.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
+1. Install `github-account-manager-1.6.2.vsix` in VS Code (Extensions → Install from VSIX), then reload the VS Code window.
 2. Keep your local VS Code window open. The extension starts its connection automatically; you can also open **GitHub: Open Control Panel Dashboard**.
 3. From this repository run `npm start --prefix desktop`. Select the VS Code window if more than one is available.
 
@@ -25,6 +25,11 @@ The first MOH-83 agent tool reads authenticated metadata for the repository open
 Run `npm run build --prefix desktop` once, then configure an MCP client to launch `node` with the absolute path to `desktop/dist/desktop/src/mcp.js`. The server exposes `list_vscode_windows` and `get_repository_metadata`. Use the first tool to obtain a connection ID, then pass it to the second tool. VS Code must remain open with the target repository trusted and mapped.
 
 ## Data and security
+
+### AI-agent approval (1.6.2)
+Before using the CLI or MCP repository tool, run **GitHub: Manage AI Agent Access** in VS Code, or use **Manage AI Agent Access** in the extension dashboard. Access starts disabled. Confirm the displayed repository and account to enable read-only access for local clients in that window. Run the control again to withdraw approval.
+
+Approval is stored in VS Code workspace state as a hash bound to the first folder's repository path, exact remote, account ID, username and authentication method. A different context is denied; restoring the exact approved context matches again unless approval was withdrawn. Requests recheck approval and context before returning their result. Withdrawal blocks subsequent results but cannot erase data already returned to a client. Use separate windows for separate repositories; no GitHub credentials are stored in approval state.
 
 ### Token health
 The dashboard's account **Health** button checks that account's saved token against the current repository. The desktop **Authentication health** action uses the repository's mapped account (or the active account if unmapped). Results distinguish missing/expired/wrong-account tokens, repository access, SSO/rate limits and rejection by GitHub's push endpoint. The endpoint check only requests Git service information; it never pushes or changes credentials. Branch rules and workflow permissions can still reject a particular push, and terminal Git may use a different cached credential. SSH/CLI profiles are explicitly reported as outside saved-token verification.

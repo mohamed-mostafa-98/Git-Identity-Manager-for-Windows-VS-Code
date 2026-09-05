@@ -2,7 +2,7 @@
   "name": "github-account-manager",
   "displayName": "GitHub Account & Git Identity Manager",
   "description": "Production-grade Windows & VS Code tool for seamlessly switching and managing multiple GitHub accounts and Git identities.",
-  "version": "1.6.0",
+  "version": "1.6.2",
   "publisher": "mohammed-dev",
   "license": "MIT",
   "repository": {
@@ -39,6 +39,11 @@
   ],
   "contributes": {
     "commands": [
+      {
+        "command": "githubAccountManager.manageAgentAccess",
+        "title": "GitHub: Manage AI Agent Access",
+        "category": "GitHub Manager"
+      },
       {
         "command": "githubAccountManager.saveToken",
         "title": "GitHub: Save or Update Account Token",

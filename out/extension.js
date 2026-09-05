@@ -43,6 +43,7 @@ const logger_1 = require("./utils/logger");
 const AccountProfile_1 = require("./models/AccountProfile");
 const TokenHealthService_1 = require("./services/TokenHealthService");
 const DesktopBridge_1 = require("./services/DesktopBridge");
+const AgentApproval_1 = require("./services/AgentApproval");
 let statusBarController;
 async function activate(context) {
     logger_1.Logger.initialize('GitHub Account Manager');
@@ -57,6 +58,44 @@ async function activate(context) {
     const sshAuthStrategy = new SSHAuthStrategy_1.SSHAuthStrategy();
     const ghCliStrategy = new GitHubCliStrategy_1.GitHubCliStrategy();
     const diagnosticsService = new DiagnosticsService_1.DiagnosticsService(profileManager, repoDetector, ghCliStrategy);
+    const approvalStateKey = 'githubAccountManager.agentApproval';
+    const agentContext = async () => {
+        if (!vscode.workspace.isTrusted)
+            throw new Error('Trust this workspace before granting agent access.');
+        const folder = vscode.workspace.workspaceFolders?.[0];
+        const repository = folder && await repoDetector.detectRepository(folder.uri.fsPath);
+        if (!repository)
+            throw new Error('Open a Git repository with an origin remote.');
+        const profile = repoMapper.resolveProfileForRepository(repository);
+        if (!profile)
+            throw new Error('Assign this repository to an account before granting agent access.');
+        return { repository, profile, key: (0, AgentApproval_1.agentApprovalKey)(repository, profile) };
+    };
+    context.subscriptions.push(vscode.commands.registerCommand('githubAccountManager.manageAgentAccess', async () => {
+        try {
+            // Withdrawal must remain available even if the repository or mapping disappeared.
+            if (context.workspaceState.get(approvalStateKey)) {
+                await context.workspaceState.update(approvalStateKey, undefined);
+                await vscode.window.showInformationMessage('AI-agent access withdrawn. Run this command again to approve the current repository.');
+                return;
+            }
+            const target = await agentContext();
+            const choice = await vscode.window.showInformationMessage(`AI-agent access is disabled. Enable read-only access to ${target.repository.owner}/${target.repository.repoName} as ${target.profile.githubUsername}? Local MCP clients will be able to read repository metadata through this VS Code window.`, { modal: true }, 'Enable read-only access');
+            if (choice !== 'Enable read-only access')
+                return;
+            const current = await agentContext();
+            if (current.key !== target.key)
+                throw new Error('Repository or account changed. Review access again.');
+            await context.workspaceState.update(approvalStateKey, current.key);
+            await vscode.window.showInformationMessage('AI-agent read-only access enabled. Use Manage AI Agent Access to withdraw it.');
+        }
+        catch (error) {
+            showFailure(error);
+        }
+        finally {
+            DashboardWebview_1.DashboardWebview.refresh();
+        }
+    }));
     // UI Controllers & Tree Views
     statusBarController = new StatusBarController_1.StatusBarController(profileManager);
     context.subscriptions.push(statusBarController);
@@ -144,7 +183,7 @@ async function activate(context) {
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => autoSync()));
     // Register Commands
     context.subscriptions.push(vscode.commands.registerCommand('githubAccountManager.openDashboard', () => {
-        DashboardWebview_1.DashboardWebview.createOrShow(context.extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncWorkspaceProfile);
+        DashboardWebview_1.DashboardWebview.createOrShow(context.extensionUri, profileManager, repoDetector, repoMapper, gitIdentityManager, diagnosticsService, syncWorkspaceProfile, () => context.workspaceState.get(approvalStateKey));
     }), vscode.commands.registerCommand('githubAccountManager.removeMapping', async (item) => {
         const targetId = item?.mapping?.id;
         if (!targetId)
@@ -349,16 +388,13 @@ async function activate(context) {
             const bridge = await (0, DesktopBridge_1.startDesktopBridge)(vscode.workspace.name || 'VS Code — no folder', async (request) => {
                 try {
                     if (request.action === 'agentRepository') {
-                        if (!vscode.workspace.isTrusted)
-                            throw new Error('Trust this workspace before granting agent access.');
-                        const folder = vscode.workspace.workspaceFolders?.[0];
-                        const repository = folder && await repoDetector.detectRepository(folder.uri.fsPath);
-                        if (!repository)
-                            throw new Error('Open a Git repository with an origin remote.');
-                        const profile = repoMapper.resolveProfileForRepository(repository);
-                        if (!profile)
-                            throw new Error('Assign this repository to an account before granting agent access.');
-                        return new TokenHealthService_1.TokenHealthService().repositoryMetadata(profile, await secretService.getToken(profile.id), repository);
+                        const { repository, profile, key } = await agentContext();
+                        (0, AgentApproval_1.requireAgentApproval)(context.workspaceState.get(approvalStateKey), key);
+                        const result = await new TokenHealthService_1.TokenHealthService().repositoryMetadata(profile, await secretService.getToken(profile.id), repository);
+                        const current = await agentContext();
+                        (0, AgentApproval_1.requireAgentApproval)(context.workspaceState.get(approvalStateKey), key);
+                        (0, AgentApproval_1.requireAgentApproval)(current.key, key);
+                        return result;
                     }
                     if (request.action !== 'snapshot') {
                         if (!vscode.workspace.isTrusted)
