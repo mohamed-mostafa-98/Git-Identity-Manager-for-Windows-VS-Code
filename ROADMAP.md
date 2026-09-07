@@ -25,6 +25,7 @@
 
 ## Milestone 3: Authenticated AI-agent connector (MOH-83)
 - [x] Add project-scoped MCP and CLI tools that use the assigned account for read-only repository metadata.
+- [x] Add repository/account approval and withdrawal with visible dashboard status (1.6.1–1.6.2).
 - [ ] Continue from repository metadata to pull-request reads.
 - [ ] Never expose raw tokens to the model, logs, arguments, or tool output.
 - [ ] Add explicit authorization for write operations only after read isolation is proven.

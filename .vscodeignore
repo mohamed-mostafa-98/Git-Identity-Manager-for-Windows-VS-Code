@@ -8,3 +8,7 @@ desktop/**
 AGENTS.md
 .playwright-mcp/**
 out/test/**
+website/**
+presentation/**
+_site/**
+.github/**

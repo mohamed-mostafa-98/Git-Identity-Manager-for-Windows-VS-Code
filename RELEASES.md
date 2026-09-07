@@ -99,9 +99,10 @@ Artifact: `github-account-manager-1.0.0.vsix`
 
 ## Verification status
 
-- Extension: 14 automated unit/regression checks currently pass on Windows.
-- Desktop: 5 core tests and native Electron UI smoke checks have passed on Windows.
+- Extension: 15 automated unit/regression checks have passed on Windows.
+- Desktop: 6 core tests and native Electron UI smoke checks have passed on Windows.
 - Live GitHub operations require user accounts and are not performed by automated tests.
+- One approved live repository read and a normal Git push succeeded with the intended account; this does not complete two-account or cross-platform verification.
 - macOS/Linux credential and installer validation remain pending.
 
 ## Planned releases
