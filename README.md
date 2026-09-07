@@ -152,10 +152,17 @@ Work is tracked in the **GitHub Account & Git Identity Manager** project in the 
 
 The project will not claim cross-platform credential support until each platform's secure storage and two-account isolation have been tested.
 
+## Alternatives and product position
+
+This is not the only way to work with multiple GitHub accounts. Git and Git Credential Manager can isolate HTTPS credentials by repository; Git `includeIf` rules and SSH aliases can apply identities by folder; GitHub CLI and other VS Code extensions provide account switching.
+
+Git Identity Manager focuses on making the **project assignment** visible and verifiable: repository-local commit identity, credential routing, health checks, desktop context, and optional repository-bound AI approval share the same profile and mapping data. See the [case study and competitor feature comparison](COMPETITIVE-LANDSCAPE.md) for alternatives, trade-offs, evidence, and current product limits.
+
 ## Documentation
 
 - [Product website source](website/README.md)
 - [Client presentation](presentation/README.md)
+- [Case study and competitor comparison](COMPETITIVE-LANDSCAPE.md)
 
 - [Linear closure verification checklist](VERIFICATION-CHECKLIST.md)
 - [Saved authentication](SAVED-AUTHENTICATION.md)
